@@ -1,4 +1,3 @@
-import FlowChart from './flowchart.chart';
 import StartNode from './fc.start';
 import EndNode from './fc.end';
 import OperationNode from './fs.operation';
@@ -8,7 +7,6 @@ import { LoopNode } from './fc.loop';
 import { graph } from '.';
 
 export interface IChart {
-  diagram: FlowChart;
   start: Token;
   tokens: {
     [key: string]: Token;
@@ -30,11 +28,24 @@ export interface Token {
   direction_next?: any;
 }
 
+interface XLayer {
+  num: number;
+  max: number;
+}
+
+interface YLayer {
+  num: number;
+  max: number;
+}
 export class Chart implements IChart {
   tokens = null;
   start = null;
-  nodes = null;
+  nodes: { [key: string]: BaseNode } = null;
   diagram = null;
+  // xLayer: XLayer = { num: 1, max: 0 };
+  // yLayer: YLayer = { num: 1, max: 0 };
+  xLayerMap: Map<number, number> = new Map();
+  yLayerMap: Map<number, number> = new Map();
   constructor() {
     this.tokens = {};
     this.nodes = {};
@@ -44,7 +55,6 @@ export class Chart implements IChart {
     if (this.diagram) {
       this.diagram.clean();
     }
-    this.diagram = new FlowChart(container, options);
     this.constructChart(this.start);
     // for (let tokenName in this.tokens) {
     //   let token = this.tokens[tokenName];
@@ -110,23 +120,49 @@ export class Chart implements IChart {
 
     switch (token.tokenType) {
       case 'start':
-        this.nodes[token.name] = new StartNode(token);
+        this.nodes[token.name] = new StartNode(token, this);
         break;
       case 'operation':
-        this.nodes[token.name] = new OperationNode(token);
+        this.nodes[token.name] = new OperationNode(token, this);
         break;
       case 'condition':
-        this.nodes[token.name] = new ConditionNode(token);
+        this.nodes[token.name] = new ConditionNode(token, this);
         break;
       case 'end':
-        this.nodes[token.name] = new EndNode(token);
+        this.nodes[token.name] = new EndNode(token, this);
         break;
       case 'loop':
-        this.nodes[token.name] = new LoopNode(token);
+        this.nodes[token.name] = new LoopNode(token, this);
         break;
     }
 
     return this.nodes[token.name];
+  }
+
+  updateXLayer() {}
+
+  updateYLayer(layer: number, height: any) {
+    let y = this.yLayerMap.get(layer);
+    if (y) {
+      if (height > y) {
+        let diff = height - y;
+        // this.diffYLayer(layer + 1, diff);
+
+        console.log(diff, layer);
+        this.yLayerMap.set(layer, height);
+      }
+    } else {
+      this.yLayerMap.set(layer, height);
+    }
+  }
+
+  diffYLayer(layer: number, diff: number) {
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      if (node.layer === layer) {
+        node.geometry.y += diff;
+      }
+    }
   }
 }
 function parse(input) {

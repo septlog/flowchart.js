@@ -146,18 +146,23 @@ export { graph, parent };
 let str = `
 st=>start: 开始
 loop1=>loop: i<10
-loop2=>loop: j<10
 loop1end=>operation: i++
 cond1=>condition: 条件1
 cond2=>condition: 条件2
 op1=>operation: 语句1
 op2=>operation: 语句2
+语句2
+语句2
+语句2
+语句2
+语句2
+语句2
+语句2
 op3=>operation: 语句3
 op4=>operation: 语句4
 op5=>operation: 语句5
 st->loop1
-loop1(yes)->loop2
-loop2(yes)->cond1
+loop1(yes)->cond1
 loop1(no)->op4
 cond1(yes)->op1
 cond1(no)->cond2

@@ -1,4 +1,4 @@
-import { Token } from './fc.parse';
+import { Chart, Token } from './fc.parse';
 import BaseNode from './fc.base';
 import { graph, mxgraph, parent } from './';
 import ConditionNode from './fc.condition';
@@ -10,8 +10,8 @@ class LoopNode extends BaseNode {
   yesVisited: boolean = false;
   noVisited: boolean = false;
 
-  constructor(token: Token) {
-    super(token);
+  constructor(token: Token, chart: Chart) {
+    super(token, chart);
     let vertex = graph.insertVertex(
       parent,
       null,
@@ -43,23 +43,25 @@ class LoopNode extends BaseNode {
       this.yesVisited = true;
       nextNode.loopNode = this;
 
-      nextNode.geometry.x =
-        this.geometry.x + this.geometry.width / 2 - nextNode.geometry.width / 2;
-      nextNode.geometry.y = this.geometry.y + this.geometry.height + 40;
+      if (!nextNode.placed) {
+        nextNode.placed = true;
+        nextNode.geometry.x =
+          this.geometry.x +
+          this.geometry.width / 2 -
+          nextNode.geometry.width / 2;
+        nextNode.geometry.y = this.geometry.y + this.geometry.height + 40;
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '是',
+          this.vertex,
+          nextNode.vertex,
+        );
+        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+      }
       if (this.loopNode) {
         this.loopNode.updateDepth();
       }
-    }
-
-    let edge = graph.insertEdge(
-      parent,
-      null,
-      '是',
-      this.vertex,
-      nextNode.vertex,
-    );
-    if (nextNode instanceof ConditionNode) {
-      let temp = this;
     }
   }
   no(nextNode: BaseNode) {
@@ -67,47 +69,54 @@ class LoopNode extends BaseNode {
 
     if (!this.noVisited) {
       this.noVisited = true;
-      nextNode.geometry.x = this.geometry.x + this.geometry.width + 50;
-      nextNode.geometry.y =
-        this.geometry.y +
-        this.geometry.height / 2 -
-        nextNode.geometry.height / 2;
+      nextNode.loopNode = this;
+      if (!nextNode.placed) {
+        nextNode.placed = true;
+        nextNode.geometry.x = this.geometry.x + this.geometry.width + 50;
+        nextNode.geometry.y =
+          this.geometry.y +
+          this.geometry.height / 2 -
+          nextNode.geometry.height / 2;
 
-      nextNode.layer = this.layer + 1;
-      nextNode.geometry.y =
-        this.geometry.y + this.geometry.height + this.depth * 60;
+        nextNode.layer = this.layer + 1;
+        nextNode.geometry.y =
+          this.geometry.y + this.geometry.height + this.depth * 60;
 
-      nextNode.geometry.x =
-        this.geometry.x + this.geometry.width / 2 - nextNode.geometry.width / 2;
-      let edge = graph.insertEdge(
-        parent,
-        null,
-        '否',
-        this.vertex,
-        nextNode.vertex,
-      );
-      edge.geometry.points = [
-        new mxgraph.mxPoint(
-          this.geometry.x + this.geometry.width,
-          this.geometry.y + this.geometry.height / 2,
-        ),
-        new mxgraph.mxPoint(
-          this.geometry.x + this.geometry.width + this.width * 80,
-          this.geometry.y + this.geometry.height / 2,
-        ),
-        new mxgraph.mxPoint(
-          this.geometry.x + this.geometry.width + this.width * 80,
-          nextNode.geometry.y - 20,
-        ),
-        new mxgraph.mxPoint(
-          nextNode.geometry.x + nextNode.geometry.width / 2,
-          nextNode.geometry.y - 20,
-        ),
-        new mxgraph.mxPoint(
-          nextNode.geometry.x + nextNode.geometry.width / 2,
-          nextNode.geometry.y,
-        ),
-      ];
+        nextNode.geometry.x =
+          this.geometry.x +
+          this.geometry.width / 2 -
+          nextNode.geometry.width / 2;
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '否',
+          this.vertex,
+          nextNode.vertex,
+        );
+        edge.geometry.points = [
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width,
+            this.geometry.y + this.geometry.height / 2,
+          ),
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width + this.width * 80,
+            this.geometry.y + this.geometry.height / 2,
+          ),
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width + this.width * 80,
+            nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            nextNode.geometry.x + nextNode.geometry.width / 2,
+            nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            nextNode.geometry.x + nextNode.geometry.width / 2,
+            nextNode.geometry.y,
+          ),
+        ];
+        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+      }
     }
   }
 

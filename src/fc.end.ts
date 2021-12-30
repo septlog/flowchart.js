@@ -1,11 +1,10 @@
 import { graph, mxgraph, parent } from '.';
-import FlowChart from './flowchart.chart';
 import BaseNode from './fc.base';
-import { Token } from './fc.parse';
+import { Chart, Token } from './fc.parse';
 
 class EndNode extends BaseNode {
-  constructor(token: Token) {
-    super(token);
+  constructor(token: Token, chart: Chart) {
+    super(token, chart);
     let vertex = graph.insertVertex(
       parent,
       null,
