@@ -1,4 +1,4 @@
-$ cat .gitignore
+
 
 # Can ignore specific files
 .settings.xml
@@ -17,4 +17,4 @@ bin
 reports
 reports/**/*
 package-lock.json
-release
+dist

@@ -61,6 +61,16 @@ export class Chart implements IChart {
     //   this.constructChart(token);
     // }
     console.log(this.nodes);
+    console.log(this.yLayerMap);
+
+    this.yLayerMap.forEach((value, key) => {
+      for (let nodeName in this.nodes) {
+        let node = this.nodes[nodeName];
+        if (node.layer >= key + 1) {
+          node.geometry.y += value - 20;
+        }
+      }
+    });
   }
   constructChart(token: Token, prevNode?: BaseNode, prevToken?: Token) {
     let node = this.getNode(token);

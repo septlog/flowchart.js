@@ -92565,6 +92565,8 @@ var BaseNode = /** @class */ (function () {
         this.visited = false;
         this.placed = false;
         this.prev = [];
+        this.col = 1;
+        this.row = 1;
         /**
          * 层数
          */
@@ -92775,6 +92777,7 @@ var LoopNode = /** @class */ (function (_super) {
         _this.width = 1;
         _this.yesVisited = false;
         _this.noVisited = false;
+        _this.noNodeLayer = 1;
         var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
@@ -92816,12 +92819,13 @@ var LoopNode = /** @class */ (function (_super) {
             nextNode.loopNode = this;
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                this.noNode.layer = this.noNodeLayer;
+                console.log(this.noNode.layer);
                 nextNode.geometry.x = this.geometry.x + this.geometry.width + 50;
                 nextNode.geometry.y =
                     this.geometry.y +
                         this.geometry.height / 2 -
                         nextNode.geometry.height / 2;
-                nextNode.layer = this.layer + 1;
                 nextNode.geometry.y =
                     this.geometry.y + this.geometry.height + this.depth * 60;
                 nextNode.geometry.x =
@@ -92896,6 +92900,7 @@ var Chart = /** @class */ (function () {
         this.diagram = null;
     }
     Chart.prototype.drawSVG = function (container, options) {
+        var _this = this;
         if (this.diagram) {
             this.diagram.clean();
         }
@@ -92905,6 +92910,15 @@ var Chart = /** @class */ (function () {
         //   this.constructChart(token);
         // }
         console.log(this.nodes);
+        console.log(this.yLayerMap);
+        this.yLayerMap.forEach(function (value, key) {
+            for (var nodeName in _this.nodes) {
+                var node = _this.nodes[nodeName];
+                if (node.layer >= key + 1) {
+                    node.geometry.y += value - 20;
+                }
+            }
+        });
     };
     Chart.prototype.constructChart = function (token, prevNode, prevToken) {
         var node = this.getNode(token);
@@ -93238,7 +93252,7 @@ var OperationNode = /** @class */ (function (_super) {
                 }
                 var edge = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, nextNode.vertex);
                 nextNode.layer = this.layer + 1;
-                this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height + nextNode.geometry.y);
+                this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
             }
             else {
                 if (nextNode.layer < this.layer + 1) {
@@ -93267,6 +93281,7 @@ var OperationNode = /** @class */ (function (_super) {
     };
     OperationNode.prototype.back = function (nextNode) {
         this.isBack = true;
+        this.backNode = nextNode;
         if (!this.visited) {
             this.visited = true;
             var edge = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, nextNode.vertex);
@@ -93290,6 +93305,11 @@ var OperationNode = /** @class */ (function (_super) {
         }
     };
     OperationNode.prototype.updateBackEdge = function () {
+        // if (this.loopNode.noNode) {
+        //   this.loopNode.noNode.layer = this.layer + 1;
+        // }
+        this.backNode.noNodeLayer = this.layer + 1;
+        console.log(this.backNode.noNodeLayer);
         this.edge.geometry.points = [
             new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(this.geometry.x, this.geometry.y + this.geometry.height / 2),
             new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(this.geometry.x - 50, this.geometry.y + this.geometry.height / 2),
@@ -93456,7 +93476,7 @@ var parent = graph.getDefaultParent();
 // cond30(no)->op33
 // op33->cond35
 // `;
-var str = "\nst=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
+var str = "\nst=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
 // let str = `
 // st=>start: 开始
 // loop1=>loop: i<10

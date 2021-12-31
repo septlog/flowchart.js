@@ -6,6 +6,7 @@ import { LoopNode } from './fc.loop';
 
 class OperationNode extends BaseNode {
   isBack: boolean;
+  backNode: LoopNode;
   constructor(token: Token, chart: Chart) {
     super(token, chart);
     let vertex = graph.insertVertex(parent, null, token.text, 0, 0, 10, 10);
@@ -44,10 +45,7 @@ class OperationNode extends BaseNode {
           nextNode.vertex,
         );
         nextNode.layer = this.layer + 1;
-        this.chart.updateYLayer(
-          nextNode.layer,
-          nextNode.geometry.height + nextNode.geometry.y,
-        );
+        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
       } else {
         if (nextNode.layer < this.layer + 1) {
           if (nextNode instanceof OperationNode) {
@@ -113,6 +111,7 @@ class OperationNode extends BaseNode {
 
   back(nextNode: LoopNode) {
     this.isBack = true;
+    this.backNode = nextNode;
     if (!this.visited) {
       this.visited = true;
       let edge = graph.insertEdge(
@@ -146,6 +145,11 @@ class OperationNode extends BaseNode {
   }
 
   updateBackEdge() {
+    // if (this.loopNode.noNode) {
+    //   this.loopNode.noNode.layer = this.layer + 1;
+    // }
+    this.backNode.noNodeLayer = this.layer + 1;
+    console.log(this.backNode.noNodeLayer);
     this.edge.geometry.points = [
       new mxgraph.mxPoint(
         this.geometry.x,

@@ -9,6 +9,7 @@ class LoopNode extends BaseNode {
   width: number = 1;
   yesVisited: boolean = false;
   noVisited: boolean = false;
+  noNodeLayer: number = 1;
 
   constructor(token: Token, chart: Chart) {
     super(token, chart);
@@ -72,13 +73,14 @@ class LoopNode extends BaseNode {
       nextNode.loopNode = this;
       if (!nextNode.placed) {
         nextNode.placed = true;
+        this.noNode.layer = this.noNodeLayer;
+        console.log(this.noNode.layer);
         nextNode.geometry.x = this.geometry.x + this.geometry.width + 50;
         nextNode.geometry.y =
           this.geometry.y +
           this.geometry.height / 2 -
           nextNode.geometry.height / 2;
 
-        nextNode.layer = this.layer + 1;
         nextNode.geometry.y =
           this.geometry.y + this.geometry.height + this.depth * 60;
 

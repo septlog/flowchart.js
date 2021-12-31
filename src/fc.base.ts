@@ -18,6 +18,8 @@ class BaseNode {
   token: Token;
   loopNode: LoopNode;
   condNode: ConditionNode;
+  col: number = 1;
+  row: number = 1;
 
   get geometry() {
     return this.vertex.geometry;
