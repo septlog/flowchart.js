@@ -60,13 +60,16 @@ export class Chart implements IChart {
     //   let token = this.tokens[tokenName];
     //   this.constructChart(token);
     // }
-    console.log(this.nodes);
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      console.log(nodeName, node.row, node.col);
+    }
     console.log(this.yLayerMap);
 
     this.yLayerMap.forEach((value, key) => {
       for (let nodeName in this.nodes) {
         let node = this.nodes[nodeName];
-        if (node.layer >= key + 1) {
+        if (node.row >= key + 1) {
           node.geometry.y += value - 20;
         }
       }
@@ -169,7 +172,7 @@ export class Chart implements IChart {
   diffYLayer(layer: number, diff: number) {
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
-      if (node.layer === layer) {
+      if (node.row === layer) {
         node.geometry.y += diff;
       }
     }

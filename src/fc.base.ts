@@ -19,15 +19,14 @@ class BaseNode {
   loopNode: LoopNode;
   condNode: ConditionNode;
   col: number = 1;
+  /**
+   * 层数
+   */
   row: number = 1;
 
   get geometry() {
     return this.vertex.geometry;
   }
-  /**
-   * 层数
-   */
-  layer: number = 1;
 
   constructor(token: Token, chart: Chart) {
     this.token = token;

@@ -27,6 +27,10 @@ class OperationNode extends BaseNode {
 
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.row = this.row + 1;
+        nextNode.col = this.col;
+
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x +
           this.vertex.geometry.width / 2 -
@@ -37,73 +41,79 @@ class OperationNode extends BaseNode {
           this.loopNode.updateDepth();
         }
 
-        let edge = graph.insertEdge(
-          parent,
-          null,
-          '',
-          this.vertex,
-          nextNode.vertex,
-        );
-        nextNode.layer = this.layer + 1;
-        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+        if (this.condNode) {
+          if (this.geometry.width > this.condNode.childMaxWidth) {
+            this.condNode.maxWidthChild = this;
+            this.condNode.childMaxWidth = this.geometry.width;
+          }
+        }
+
+        // let edge = graph.insertEdge(
+        //   parent,
+        //   null,
+        //   '',
+        //   this.vertex,
+        //   nextNode.vertex,
+        // );
+
+        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
       } else {
-        if (nextNode.layer < this.layer + 1) {
+        if (nextNode.row < this.row + 1) {
           if (nextNode instanceof OperationNode) {
             nextNode.down(1);
           }
-          this.edge = graph.insertEdge(
-            parent,
-            null,
-            '',
-            this.vertex,
-            nextNode.vertex,
-          );
-          this.edge.geometry.points = [
-            new mxgraph.mxPoint(
-              this.geometry.x + this.geometry.width / 2,
-              this.geometry.y + this.geometry.height,
-            ),
-            new mxgraph.mxPoint(
-              this.geometry.x + this.geometry.width / 2,
-              nextNode.geometry.y - 20,
-            ),
+          // this.edge = graph.insertEdge(
+          //   parent,
+          //   null,
+          //   '',
+          //   this.vertex,
+          //   nextNode.vertex,
+          // );
+          // this.edge.geometry.points = [
+          //   new mxgraph.mxPoint(
+          //     this.geometry.x + this.geometry.width / 2,
+          //     this.geometry.y + this.geometry.height,
+          //   ),
+          //   new mxgraph.mxPoint(
+          //     this.geometry.x + this.geometry.width / 2,
+          //     nextNode.geometry.y - 20,
+          //   ),
 
-            new mxgraph.mxPoint(
-              nextNode.geometry.x + nextNode.geometry.width / 2,
-              nextNode.geometry.y - 20,
-            ),
-            new mxgraph.mxPoint(
-              nextNode.geometry.x + nextNode.geometry.width / 2,
-              nextNode.geometry.y,
-            ),
-          ];
+          //   new mxgraph.mxPoint(
+          //     nextNode.geometry.x + nextNode.geometry.width / 2,
+          //     nextNode.geometry.y - 20,
+          //   ),
+          //   new mxgraph.mxPoint(
+          //     nextNode.geometry.x + nextNode.geometry.width / 2,
+          //     nextNode.geometry.y,
+          //   ),
+          // ];
         } else {
-          this.edge = graph.insertEdge(
-            parent,
-            null,
-            '',
-            this.vertex,
-            nextNode.vertex,
-          );
-          this.edge.geometry.points = [
-            new mxgraph.mxPoint(
-              this.geometry.x + this.geometry.width / 2,
-              this.geometry.y + this.geometry.height,
-            ),
-            new mxgraph.mxPoint(
-              this.geometry.x + this.geometry.width / 2,
-              nextNode.geometry.y - 20,
-            ),
-
-            new mxgraph.mxPoint(
-              nextNode.geometry.x + nextNode.geometry.width / 2,
-              nextNode.geometry.y - 20,
-            ),
-            new mxgraph.mxPoint(
-              nextNode.geometry.x + nextNode.geometry.width / 2,
-              nextNode.geometry.y,
-            ),
-          ];
+          // this.edge = graph.insertEdge(
+          //   parent,
+          //   null,
+          //   '',
+          //   this.vertex,
+          //   nextNode.vertex,
+          // );
+          // this.edge.geometry.points = [
+          //   new mxgraph.mxPoint(
+          //     this.geometry.x + this.geometry.width / 2,
+          //     this.geometry.y + this.geometry.height,
+          //   ),
+          //   new mxgraph.mxPoint(
+          //     this.geometry.x + this.geometry.width / 2,
+          //     nextNode.geometry.y - 20,
+          //   ),
+          //   new mxgraph.mxPoint(
+          //     nextNode.geometry.x + nextNode.geometry.width / 2,
+          //     nextNode.geometry.y - 20,
+          //   ),
+          //   new mxgraph.mxPoint(
+          //     nextNode.geometry.x + nextNode.geometry.width / 2,
+          //     nextNode.geometry.y,
+          //   ),
+          // ];
         }
       }
     }
@@ -114,16 +124,16 @@ class OperationNode extends BaseNode {
     this.backNode = nextNode;
     if (!this.visited) {
       this.visited = true;
-      let edge = graph.insertEdge(
-        parent,
-        null,
-        '',
-        this.vertex,
-        nextNode.vertex,
-      );
+      // let edge = graph.insertEdge(
+      //   parent,
+      //   null,
+      //   '',
+      //   this.vertex,
+      //   nextNode.vertex,
+      // );
 
-      this.edge = edge;
-      this.updateBackEdge();
+      // this.edge = edge;
+      // this.updateBackEdge();
     }
   }
 
@@ -132,12 +142,12 @@ class OperationNode extends BaseNode {
    * @param num 层数
    */
   down(num: number) {
-    this.layer += num;
+    this.row += num;
     this.geometry.y += 60;
-    this.chart.updateYLayer(this.layer, this.geometry.height);
+    this.chart.updateYLayer(this.row, this.geometry.height);
 
     if (this.isBack) {
-      this.updateBackEdge();
+      // this.updateBackEdge();
     }
     if (this.nextNode instanceof OperationNode) {
       this.nextNode.down(num);
@@ -148,7 +158,7 @@ class OperationNode extends BaseNode {
     // if (this.loopNode.noNode) {
     //   this.loopNode.noNode.layer = this.layer + 1;
     // }
-    this.backNode.noNodeLayer = this.layer + 1;
+    this.backNode.noNodeLayer = this.row + 1;
     console.log(this.backNode.noNodeLayer);
     this.edge.geometry.points = [
       new mxgraph.mxPoint(

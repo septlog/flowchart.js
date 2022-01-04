@@ -22,7 +22,7 @@ class StartNode extends BaseNode {
 
     if (!this.visited) {
       this.visited = true;
-      nextNode.layer++;
+      nextNode.row++;
       if (!nextNode.placed) {
         nextNode.placed = true;
         nextNode.vertex.geometry.x =
@@ -31,14 +31,14 @@ class StartNode extends BaseNode {
           nextNode.vertex.geometry.width / 2;
         nextNode.vertex.geometry.y =
           this.vertex.geometry.y + this.vertex.geometry.height + 40;
-        this.edge = graph.insertEdge(
-          parent,
-          null,
-          '',
-          this.vertex,
-          nextNode.vertex,
-        );
-        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+        // this.edge = graph.insertEdge(
+        //   parent,
+        //   null,
+        //   '',
+        //   this.vertex,
+        //   nextNode.vertex,
+        // );
+        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
       }
     }
   }

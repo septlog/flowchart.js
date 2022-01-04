@@ -149,8 +149,12 @@ loop1=>loop: i<10
 loop1end=>operation: i++
 cond1=>condition: 条件1
 cond2=>condition: 条件2
-op1=>operation: 语句1
+op1=>operation: 语句1语句1语句1语句1语句1语句1语句1语句1语句1语句1
 op2=>operation: 语句2
+语句2
+语句2
+语句2
+语句2
 op3=>operation: 语句3
 op4=>operation: 语句4
 op5=>operation: 语句5

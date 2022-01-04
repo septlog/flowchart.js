@@ -11,6 +11,8 @@ class ConditionNode extends BaseNode {
   noNode: BaseNode;
   yesVisited: boolean = false;
   noVisited: boolean = false;
+  childMaxWidth: number = 0;
+  maxWidthChild: BaseNode = null;
   constructor(token: Token, chart: Chart) {
     super(token, chart);
     let vertex = graph.insertVertex(
@@ -37,21 +39,23 @@ class ConditionNode extends BaseNode {
       // 如果没有被放置
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.row = this.row + 1;
+        nextNode.col = this.col;
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x +
           this.vertex.geometry.width / 2 -
           nextNode.vertex.geometry.width / 2;
         nextNode.vertex.geometry.y =
           this.vertex.geometry.y + this.vertex.geometry.height + 40;
-        let edge = graph.insertEdge(
-          parent,
-          null,
-          '是',
-          this.vertex,
-          nextNode.vertex,
-        );
-        nextNode.layer = this.layer + 1;
-        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+        // let edge = graph.insertEdge(
+        //   parent,
+        //   null,
+        //   '是',
+        //   this.vertex,
+        //   nextNode.vertex,
+        // );
+        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
       }
 
       if (this.loopNode) {
@@ -63,8 +67,8 @@ class ConditionNode extends BaseNode {
   no(nextNode: BaseNode) {
     this.noNode = nextNode;
     nextNode.loopNode = this.loopNode;
-    if (nextNode.layer < this.layer + 1) {
-      nextNode.layer = this.layer + 1;
+    if (nextNode.row < this.row + 1) {
+      nextNode.row = this.row + 1;
     }
 
     if (!this.noVisited) {
@@ -73,19 +77,22 @@ class ConditionNode extends BaseNode {
       nextNode.loopNode = this.loopNode;
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.row = this.row + 1;
+        nextNode.col = this.col + 1;
+
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x + this.vertex.geometry.width + 50;
         nextNode.vertex.geometry.y =
           this.vertex.geometry.y + this.vertex.geometry.height + 40;
-        let edge = graph.insertEdge(
-          parent,
-          null,
-          '否',
-          this.vertex,
-          nextNode.vertex,
-        );
-        nextNode.layer = this.layer + 1;
-        this.chart.updateYLayer(nextNode.layer, nextNode.geometry.height);
+        // let edge = graph.insertEdge(
+        //   parent,
+        //   null,
+        //   '否',
+        //   this.vertex,
+        //   nextNode.vertex,
+        // );
+        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
       }
 
       if (this.loopNode) {
@@ -96,7 +103,7 @@ class ConditionNode extends BaseNode {
   }
 
   down() {
-    this.yesNode.layer = this.layer + 1;
+    this.yesNode.row = this.row + 1;
   }
 }
 
