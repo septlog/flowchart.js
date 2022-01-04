@@ -1,12 +1,9 @@
-import { RaphaelElement, RaphaelSet } from 'raphael';
 import ConditionNode from './fc.condition';
 import { Chart, Token } from './fc.parse';
 import { LoopNode } from './fc.loop';
-
 class BaseNode {
   chart: Chart;
   symbolType: string;
-  text: RaphaelElement<'SVG' | 'VML', Element | SVGTextElement>;
   width: number;
   height: number;
   vertex;
@@ -24,6 +21,8 @@ class BaseNode {
    */
   row: number = 1;
 
+  lineLength: number = 40;
+
   get geometry() {
     return this.vertex.geometry;
   }
@@ -32,6 +31,14 @@ class BaseNode {
     this.token = token;
     this.chart = chart;
   }
+
+  setX(num: number) {
+    this.geometry.x = num;
+  }
+
+  setY(num: number) {}
+
+  drawLine() {}
 }
 
 export default BaseNode;

@@ -4,12 +4,10 @@
   "version": "1.17.0",
   "private": false,
   "dependencies": {
-    "mxgraph": "^4.2.2",
-    "raphael": "^2.3.0"
+    "mxgraph": "^4.2.2"
   },
   "types": "types/index.d.ts",
   "devDependencies": {
-    "@types/raphael": "^2.3.2",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.2",
     "webpack": "^5.65.0",
@@ -18,7 +16,6 @@
   "scripts": {
     "init": "git submodule init && git submodule update && git submodule status",
     "start": "node devserver.js",
-    "lint": "eslint src",
     "watch": "webpack --watch",
     "build:minified": "NODE_ENV=production MINIFIED=1 webpack -d --config webpack.config.js",
     "build": "npm run build:unminified && npm run build:minified && cp ./release/flowchart.js ./site/flowchart-latest.js",

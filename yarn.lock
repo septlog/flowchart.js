@@ -38,11 +38,6 @@
   resolved "https://registry.npmmirror.com/@types/node/download/@types/node-16.11.12.tgz#ac7fb693ac587ee182c3780c26eb65546a1a3c10"
   integrity sha512-+2Iggwg7PxoO5Kyhvsq9VarmPbIelXP070HMImEpbtGCoyWNINQj4wzjbQCXzdHTRXnqufutJb5KAURZANNBAw==
 
-"@types/raphael@^2.3.2":
-  version "2.3.2"
-  resolved "https://registry.npmmirror.com/@types/raphael/download/@types/raphael-2.3.2.tgz#833eff033c33fb1a3935882bc29c82908cb9a734"
-  integrity sha1-gz7/Azwz+xo5NYgrwpyCkIy5pzQ=
-
 "@webassemblyjs/ast@1.11.1":
   version "1.11.1"
   resolved "https://registry.npmmirror.com/@webassemblyjs/ast/download/@webassemblyjs/ast-1.11.1.tgz#2bfd767eae1a6996f432ff7e8d7fc75679c0b6a7"
@@ -362,11 +357,6 @@ estraverse@^5.2.0:
   resolved "https://registry.npmmirror.com/estraverse/download/estraverse-5.3.0.tgz?cache=0&sync_timestamp=1635237800177&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Festraverse%2Fdownload%2Festraverse-5.3.0.tgz#2eea5290702f26ab8fe5370370ff86c965d21123"
   integrity sha1-LupSkHAvJquP5TcDcP+GyWXSESM=
 
-eve-raphael@0.5.0:
-  version "0.5.0"
-  resolved "https://registry.npmmirror.com/eve-raphael/download/eve-raphael-0.5.0.tgz#17c754b792beef3fa6684d79cf5a47c63c4cda30"
-  integrity sha1-F8dUt5K+7z+maE15z1pHxjxM2jA=
-
 events@^3.2.0:
   version "3.3.0"
   resolved "https://registry.npmmirror.com/events/download/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
@@ -665,13 +655,6 @@ randombytes@^2.1.0:
   integrity sha1-32+ENy8CcNxlzfYpE0mrekc9Tyo=
   dependencies:
     safe-buffer "^5.1.0"
-
-raphael@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.npmmirror.com/raphael/download/raphael-2.3.0.tgz#eabeb09dba861a1d4cee077eaafb8c53f3131f89"
-  integrity sha1-6r6wnbqGGh1M7gd+qvuMU/MTH4k=
-  dependencies:
-    eve-raphael "0.5.0"
 
 rechoir@^0.7.0:
   version "0.7.1"

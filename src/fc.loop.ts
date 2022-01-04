@@ -9,7 +9,7 @@ class LoopNode extends BaseNode {
   width: number = 1;
   yesVisited: boolean = false;
   noVisited: boolean = false;
-  noNodeLayer: number = 1;
+  noNodeRow: number = 1;
 
   constructor(token: Token, chart: Chart) {
     super(token, chart);
@@ -29,7 +29,6 @@ class LoopNode extends BaseNode {
     geo.x = 0;
     geo.y = 0;
     graph.getModel().setGeometry(this.vertex, geo);
-    console.log(vertex);
   }
 
   yes(nextNode: BaseNode) {
@@ -54,7 +53,8 @@ class LoopNode extends BaseNode {
           this.geometry.x +
           this.geometry.width / 2 -
           nextNode.geometry.width / 2;
-        nextNode.geometry.y = this.geometry.y + this.geometry.height + 40;
+        nextNode.geometry.y =
+          this.geometry.y + this.geometry.height + this.lineLength;
         // let edge = graph.insertEdge(
         //   parent,
         //   null,
@@ -62,10 +62,6 @@ class LoopNode extends BaseNode {
         //   this.vertex,
         //   nextNode.vertex,
         // );
-        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
-      }
-      if (this.loopNode) {
-        this.loopNode.updateDepth();
       }
     }
   }
@@ -78,66 +74,29 @@ class LoopNode extends BaseNode {
       if (!nextNode.placed) {
         nextNode.placed = true;
 
-        this.noNode.row = this.noNodeLayer;
+        this.noNode.row = this.noNodeRow;
 
-        nextNode.geometry.x = this.geometry.x + this.geometry.width + 50;
-        nextNode.geometry.y =
-          this.geometry.y +
-          this.geometry.height / 2 -
-          nextNode.geometry.height / 2;
+        // nextNode.geometry.y =
+        //   this.geometry.y +
+        //   this.geometry.height / 2 -
+        //   nextNode.geometry.height / 2;
 
-        nextNode.geometry.y =
-          this.geometry.y + this.geometry.height + this.depth * 60;
+        // nextNode.geometry.y =
+        //   this.geometry.y + this.geometry.height + this.depth * 60;
 
         nextNode.geometry.x =
           this.geometry.x +
           this.geometry.width / 2 -
           nextNode.geometry.width / 2;
-        // let edge = graph.insertEdge(
-        //   parent,
-        //   null,
-        //   '否',
-        //   this.vertex,
-        //   nextNode.vertex,
-        // );
-        // edge.geometry.points = [
-        //   new mxgraph.mxPoint(
-        //     this.geometry.x + this.geometry.width,
-        //     this.geometry.y + this.geometry.height / 2,
-        //   ),
-        //   new mxgraph.mxPoint(
-        //     this.geometry.x + this.geometry.width + this.width * 80,
-        //     this.geometry.y + this.geometry.height / 2,
-        //   ),
-        //   new mxgraph.mxPoint(
-        //     this.geometry.x + this.geometry.width + this.width * 80,
-        //     nextNode.geometry.y - 20,
-        //   ),
-        //   new mxgraph.mxPoint(
-        //     nextNode.geometry.x + nextNode.geometry.width / 2,
-        //     nextNode.geometry.y - 20,
-        //   ),
-        //   new mxgraph.mxPoint(
-        //     nextNode.geometry.x + nextNode.geometry.width / 2,
-        //     nextNode.geometry.y,
-        //   ),
-        // ];
-        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
       }
     }
   }
 
-  updateDepth() {
-    this.depth++;
-    if (this.loopNode) {
-      this.loopNode.updateDepth();
-    }
-  }
+  updateNoNode() {}
 
-  updateWidth() {
-    this.width++;
-    if (this.loopNode) {
-      this.loopNode.updateWidth();
+  drawLine(): void {
+    if (this.yesNode) {
+      graph.insertEdge(parent, null, '', this.vertex, this.yesNode.vertex);
     }
   }
 }

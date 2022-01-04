@@ -22,23 +22,60 @@ class StartNode extends BaseNode {
 
     if (!this.visited) {
       this.visited = true;
-      nextNode.row++;
+
       if (!nextNode.placed) {
         nextNode.placed = true;
-        nextNode.vertex.geometry.x =
-          this.vertex.geometry.x +
-          this.vertex.geometry.width / 2 -
-          nextNode.vertex.geometry.width / 2;
-        nextNode.vertex.geometry.y =
-          this.vertex.geometry.y + this.vertex.geometry.height + 40;
-        // this.edge = graph.insertEdge(
-        //   parent,
-        //   null,
-        //   '',
-        //   this.vertex,
-        //   nextNode.vertex,
-        // );
-        this.chart.updateYLayer(nextNode.row, nextNode.geometry.height);
+
+        nextNode.row = this.row + 1;
+        nextNode.col = this.col;
+
+        nextNode.geometry.x =
+          this.geometry.x +
+          this.geometry.width / 2 -
+          nextNode.geometry.width / 2;
+        nextNode.geometry.y =
+          this.geometry.y + this.geometry.height + this.lineLength;
+      }
+    }
+  }
+
+  drawLine() {
+    if (this.nextNode) {
+      if (this.nextNode.col === this.col) {
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          this.vertex,
+          this.nextNode.vertex,
+        );
+      } else {
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          this.vertex,
+          this.nextNode.vertex,
+        );
+
+        edge.geometry.points = [
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width / 2,
+            this.geometry.y + this.geometry.height,
+          ),
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width / 2,
+            this.nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            this.nextNode.geometry.x + this.nextNode.geometry.width / 2,
+            this.nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            this.nextNode.geometry.x + this.nextNode.geometry.width / 2,
+            this.nextNode.geometry.y,
+          ),
+        ];
       }
     }
   }

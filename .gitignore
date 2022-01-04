@@ -17,4 +17,4 @@ bin
 reports
 reports/**/*
 package-lock.json
-dist
+dist/

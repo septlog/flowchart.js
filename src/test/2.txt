@@ -1,0 +1,31 @@
+op1=>operation: 语句1
+op2=>operation: 语句2
+op3=>operation: 语句3
+op4=>operation: 语句4
+op5=>operation: 语句5
+op6=>operation: 语句6
+op7=>operation: 语句7
+cond1=>condition: 条件1
+cond2=>condition: 条件2
+cond3=>condition: 条件3
+cond4=>condition: 条件4条件4条件4条件4
+条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4
+条件4条件4条件4条件4
+条件4条件4条件4条件4
+条件4条件4条件4条件4条件4条件4条件4条件4
+条件4条件4条件4条件4
+条件4条件4条件4条件4
+条件4条件4条件4条件4
+cond1(yes)->op1
+cond1(no)->op6
+op1->cond2
+cond2(yes)->op2
+cond2(no)->cond4
+cond4(yes)->op5
+op2->cond3
+cond3(yes)->op3
+cond3(no)->op4
+op3->op7
+op4->op7
+op5->op7
+op6->op7

@@ -28,24 +28,11 @@ export interface Token {
   direction_next?: any;
 }
 
-interface XLayer {
-  num: number;
-  max: number;
-}
-
-interface YLayer {
-  num: number;
-  max: number;
-}
 export class Chart implements IChart {
   tokens = null;
   start = null;
   nodes: { [key: string]: BaseNode } = null;
   diagram = null;
-  // xLayer: XLayer = { num: 1, max: 0 };
-  // yLayer: YLayer = { num: 1, max: 0 };
-  xLayerMap: Map<number, number> = new Map();
-  yLayerMap: Map<number, number> = new Map();
   constructor() {
     this.tokens = {};
     this.nodes = {};
@@ -56,24 +43,47 @@ export class Chart implements IChart {
       this.diagram.clean();
     }
     this.constructChart(this.start);
-    // for (let tokenName in this.tokens) {
-    //   let token = this.tokens[tokenName];
-    //   this.constructChart(token);
-    // }
+
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
-      console.log(nodeName, node.row, node.col);
-    }
-    console.log(this.yLayerMap);
-
-    this.yLayerMap.forEach((value, key) => {
-      for (let nodeName in this.nodes) {
-        let node = this.nodes[nodeName];
-        if (node.row >= key + 1) {
-          node.geometry.y += value - 20;
-        }
+      if (node instanceof LoopNode) {
+        // node.updateNoNode();
       }
-    });
+    }
+
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      // if (node.col > 1) {
+      //   let leftNodes = this.findColNodes(node.col - 1);
+
+      //   for (let leftNode of leftNodes) {
+      //     if (this.intersectX(leftNode, node)) {
+      //       node.setX(
+      //         leftNode.geometry.x + leftNode.geometry.width + node.lineLength,
+      //       );
+      //     }
+      //   }
+      // }
+
+      // if (node.row > 1) {
+      //   let topNodes = this.findRowNodes(node.row - 1);
+      //   for (let topNode of topNodes) {
+      //     if (this.intersectY(topNode, node)) {
+      //       console.log('intersectY');
+      //       node.setY(
+      //         topNode.geometry.y + topNode.geometry.height + node.lineLength,
+      //       );
+      //     }
+      //   }
+      // }
+    }
+
+    console.log(this.nodes);
+
+    // for (let nodeName in this.nodes) {
+    //   let node = this.nodes[nodeName];
+    //   node.drawLine();
+    // }
   }
   constructChart(token: Token, prevNode?: BaseNode, prevToken?: Token) {
     let node = this.getNode(token);
@@ -109,9 +119,7 @@ export class Chart implements IChart {
         let noNode = this.getNode(token.no);
         node.no(noNode);
 
-        // if (!noNode.pos) {
         this.constructChart(token.no);
-        // }
       }
     } else if (node instanceof LoopNode) {
       if (token.yes) {
@@ -152,29 +160,55 @@ export class Chart implements IChart {
     return this.nodes[token.name];
   }
 
-  updateXLayer() {}
+  findNode(x: number, y: number) {
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
 
-  updateYLayer(layer: number, height: any) {
-    let y = this.yLayerMap.get(layer);
-    if (y) {
-      if (height > y) {
-        let diff = height - y;
-        // this.diffYLayer(layer + 1, diff);
-
-        console.log(diff, layer);
-        this.yLayerMap.set(layer, height);
+      // console.log(nodeName, node.row, node.col);
+      if (node.row === y && node.col === x) {
+        return node;
       }
-    } else {
-      this.yLayerMap.set(layer, height);
     }
   }
 
-  diffYLayer(layer: number, diff: number) {
+  findColNodes(x: number) {
+    let nodes = [];
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
-      if (node.row === layer) {
-        node.geometry.y += diff;
+
+      if (node.col === x) {
+        nodes.push(node);
       }
+    }
+    return nodes;
+  }
+
+  findRowNodes(y: number) {
+    let nodes = [];
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+
+      if (node.row === y) {
+        nodes.push(node);
+      }
+    }
+    return nodes;
+  }
+
+  intersectX(leftNode: BaseNode, rightNode: BaseNode) {
+    if (rightNode.geometry.x < leftNode.geometry.x + leftNode.geometry.width) {
+      return true;
+    }
+  }
+  intersectY(topNode: BaseNode, bottomNode: BaseNode) {
+    if (bottomNode.geometry.y < topNode.geometry.y + topNode.geometry.height) {
+      return true;
+    }
+  }
+
+  updateLoopNoNode() {
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
     }
   }
 }
