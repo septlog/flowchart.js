@@ -29,6 +29,9 @@ class StartNode extends BaseNode {
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
 
+        this.updateRow(nextNode.row);
+        this.updateCol(nextNode.col);
+
         nextNode.geometry.x =
           this.geometry.x +
           this.geometry.width / 2 -

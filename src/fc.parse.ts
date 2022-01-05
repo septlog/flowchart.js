@@ -4,7 +4,7 @@ import OperationNode from './fs.operation';
 import ConditionNode from './fc.condition';
 import BaseNode from './fc.base';
 import { LoopNode } from './fc.loop';
-import { graph } from '.';
+import { graph, parent, mxgraph } from '.';
 
 export interface IChart {
   start: Token;
@@ -33,6 +33,11 @@ export class Chart implements IChart {
   start = null;
   nodes: { [key: string]: BaseNode } = null;
   diagram = null;
+  rows: number = 1;
+  cols: number = 1;
+
+  rowMap: Map<any, any> = new Map();
+  colMap: Map<any, any> = new Map();
   constructor() {
     this.tokens = {};
     this.nodes = {};
@@ -46,46 +51,112 @@ export class Chart implements IChart {
 
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
-      if (node instanceof LoopNode) {
-        // node.updateNoNode();
+
+      let h = this.rowMap.get(node.row);
+      if (h) {
+        if (node.geometry.height > h) {
+          this.rowMap.set(node.row, node.geometry.height);
+        }
+      } else {
+        this.rowMap.set(node.row, node.geometry.height);
+      }
+
+      let w = this.colMap.get(node.col);
+      if (w) {
+        if (node.leftMost < w) {
+          this.colMap.set(node.col, node.leftMost);
+        }
+      } else {
+        this.colMap.set(node.col, node.leftMost);
       }
     }
 
-    for (let nodeName in this.nodes) {
-      let node = this.nodes[nodeName];
-      // if (node.col > 1) {
-      //   let leftNodes = this.findColNodes(node.col - 1);
+    console.log(this);
 
-      //   for (let leftNode of leftNodes) {
-      //     if (this.intersectX(leftNode, node)) {
-      //       node.setX(
-      //         leftNode.geometry.x + leftNode.geometry.width + node.lineLength,
-      //       );
-      //     }
-      //   }
-      // }
+    for (let i = 1; i <= this.rows; i++) {
+      let nodes = this.findRowNodes(i);
 
-      // if (node.row > 1) {
-      //   let topNodes = this.findRowNodes(node.row - 1);
-      //   for (let topNode of topNodes) {
-      //     if (this.intersectY(topNode, node)) {
-      //       console.log('intersectY');
-      //       node.setY(
-      //         topNode.geometry.y + topNode.geometry.height + node.lineLength,
-      //       );
-      //     }
-      //   }
-      // }
+      for (let node of nodes) {
+        let topNodes = this.findRowNodes(node.row - 1);
+        for (let topNode of topNodes) {
+          if (this.intersectY(topNode, node)) {
+            node.setY(
+              topNode.geometry.y + topNode.geometry.height + node.lineLength,
+            );
+          }
+        }
+      }
+    }
+
+    for (let i = 1; i <= this.cols; i++) {
+      let nodes = this.findColNodes(i);
+      for (let node of nodes) {
+        let leftNodes = this.findColNodes(node.col - 1);
+
+        for (let leftNode of leftNodes) {
+          if (this.intersectX(leftNode, node)) {
+            node.setX(
+              leftNode.geometry.x + leftNode.geometry.width + node.lineLength,
+            );
+          }
+        }
+      }
     }
 
     console.log(this.nodes);
 
-    // for (let nodeName in this.nodes) {
-    //   let node = this.nodes[nodeName];
-    //   node.drawLine();
-    // }
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+
+      if (node instanceof LoopNode) {
+        node.drawLine();
+        let w = 0;
+
+        for (let i = node.row + 1; i <= node.endRow; i++) {
+          let childRowNodes = this.findRowNodes(i);
+          for (let childRowNode of childRowNodes) {
+            if (childRowNode.col === node.width) {
+              if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
+                w = childRowNode.geometry.x + childRowNode.geometry.width;
+              }
+            }
+          }
+        }
+        console.log(w);
+
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          node.vertex,
+          node.noNode.vertex,
+        );
+
+        edge.geometry.points = [
+          new mxgraph.mxPoint(
+            node.geometry.x + node.geometry.width,
+            node.geometry.y + node.geometry.height / 2,
+          ),
+          new mxgraph.mxPoint(
+            w + 20,
+            node.geometry.y + node.geometry.height / 2,
+          ),
+          new mxgraph.mxPoint(w + 20, node.noNode.geometry.y - 20),
+          new mxgraph.mxPoint(
+            node.noNode.geometry.x + node.noNode.geometry.width / 2,
+            node.noNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            node.noNode.geometry.x + node.noNode.geometry.width / 2,
+            node.noNode.geometry.y,
+          ),
+        ];
+      } else {
+        node.drawLine();
+      }
+    }
   }
-  constructChart(token: Token, prevNode?: BaseNode, prevToken?: Token) {
+  constructChart(token: Token) {
     let node = this.getNode(token);
     if (node instanceof StartNode) {
       let nextNode = this.getNode(token.next);
@@ -97,12 +168,11 @@ export class Chart implements IChart {
 
         if (nextNode instanceof LoopNode) {
           let loopNode = node.loopNode;
-          while (loopNode) {
-            if (nextNode === loopNode) {
-              node.back(nextNode);
-              break;
-            }
-            loopNode = loopNode.loopNode;
+          if (nextNode === loopNode) {
+            node.back(nextNode);
+          } else {
+            node.then(nextNode);
+            this.constructChart(token.next);
           }
         } else {
           node.then(nextNode);

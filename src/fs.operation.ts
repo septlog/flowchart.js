@@ -31,6 +31,9 @@ class OperationNode extends BaseNode {
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
 
+        this.updateRow(nextNode.row);
+        this.updateCol(nextNode.col);
+
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x +
           this.vertex.geometry.width / 2 -
@@ -40,12 +43,12 @@ class OperationNode extends BaseNode {
           this.vertex.geometry.height +
           this.lineLength;
       } else {
-        if (nextNode.row < this.row + 1) {
-          if (nextNode instanceof OperationNode) {
-            nextNode.down(1);
-          }
-        } else {
-        }
+        // if (nextNode.row < this.row + 1) {
+        //   if (nextNode instanceof OperationNode) {
+        //     nextNode.down(1);
+        //   }
+        // } else {
+        // }
       }
     }
   }
@@ -64,24 +67,24 @@ class OperationNode extends BaseNode {
    * 当前节点以及其下面的节点都往下走一层
    * @param num 层数
    */
-  down(num: number) {
-    this.row += num;
-    this.geometry.y += 60;
+  // down(num: number) {
+  //   this.row += num;
+  //   this.geometry.y += 60;
 
-    if (this.isBack) {
-      this.updateBackEdge();
-    }
-    if (this.nextNode instanceof OperationNode) {
-      this.nextNode.down(num);
-    }
-  }
+  //   if (this.isBack) {
+  //     this.updateBackEdge();
+  //   }
+  //   if (this.nextNode instanceof OperationNode) {
+  //     this.nextNode.down(num);
+  //   }
+  // }
 
   updateBackEdge() {
     this.backNode.noNodeRow = this.row + 1;
+    this.backNode.endRow = this.row;
   }
 
   setY(num: number): void {
-    console.log(this, 'setY');
     this.geometry.y = num;
     if (this.nextNode) {
       this.nextNode.setY(
@@ -131,6 +134,8 @@ class OperationNode extends BaseNode {
     }
 
     if (this.backNode) {
+      console.log(this.backNode.col);
+      let leftMost = this.chart.colMap.get(this.backNode.col);
       let edge = graph.insertEdge(
         parent,
         null,
@@ -140,15 +145,18 @@ class OperationNode extends BaseNode {
       );
       edge.geometry.points = [
         new mxgraph.mxPoint(
-          this.geometry.x,
+          this.leftMost,
           this.geometry.y + this.geometry.height / 2,
         ),
         new mxgraph.mxPoint(
-          this.geometry.x - 50,
+          leftMost - 20 * this.backNode.loops,
           this.geometry.y + this.geometry.height / 2,
         ),
 
-        new mxgraph.mxPoint(this.geometry.x - 50, edge.target.geometry.y + 20),
+        new mxgraph.mxPoint(
+          leftMost - 20 * this.backNode.loops,
+          edge.target.geometry.y + 20,
+        ),
         new mxgraph.mxPoint(
           edge.target.geometry.x + edge.target.geometry.width / 2,
           edge.target.geometry.y - 20,
@@ -158,6 +166,10 @@ class OperationNode extends BaseNode {
           edge.target.geometry.y,
         ),
       ];
+
+      if (this.backNode.loopNode) {
+        this.backNode.loopNode.loops += 1;
+      }
     }
   }
 }

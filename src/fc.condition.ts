@@ -11,9 +11,6 @@ class ConditionNode extends BaseNode {
   yesVisited: boolean = false;
   noVisited: boolean = false;
 
-  yesDepth: number = 0;
-  noDepth: number = 0;
-
   conds: number = 1;
   constructor(token: Token, chart: Chart) {
     super(token, chart);
@@ -44,6 +41,10 @@ class ConditionNode extends BaseNode {
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
+
+        this.updateRow(nextNode.row);
+        this.updateCol(nextNode.col);
+
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x +
           this.vertex.geometry.width / 2 -
@@ -81,6 +82,13 @@ class ConditionNode extends BaseNode {
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col + this.conds;
+
+        this.updateRow(nextNode.row);
+        this.updateCol(nextNode.col);
+
+        if (this.loopNode) {
+          this.loopNode.width++;
+        }
 
         nextNode.vertex.geometry.x =
           this.vertex.geometry.x + this.vertex.geometry.width + this.lineLength;
