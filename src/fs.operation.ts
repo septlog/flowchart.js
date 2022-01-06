@@ -1,0 +1,177 @@
+import BaseNode from './fc.base';
+import { graph, mxgraph, parent } from '.';
+import ConditionNode from './fc.condition';
+import { Chart, Token } from './fc.parse';
+import { LoopNode } from './fc.loop';
+
+class OperationNode extends BaseNode {
+  isBack: boolean;
+  backNode: LoopNode;
+  constructor(token: Token, chart: Chart) {
+    super(token, chart);
+    let vertex = graph.insertVertex(parent, null, token.text, 0, 0, 10, 10);
+    this.vertex = vertex;
+    graph.updateCellSize(vertex, true);
+  }
+  /**
+   * 设置下一个节点，并在 chart 中加入该节点
+   * @param next 下一个节点
+   * @returns next
+   */
+  then(nextNode: BaseNode) {
+    if (!this.visited) {
+      this.visited = true;
+      nextNode.loopNode = this.loopNode;
+      nextNode.condNode = this.condNode;
+      this.nextNode = nextNode;
+
+      if (!nextNode.placed) {
+        nextNode.placed = true;
+
+        nextNode.row = this.row + 1;
+        nextNode.col = this.col;
+
+        this.updateRow(nextNode.row);
+        this.updateCol(nextNode.col);
+
+        nextNode.vertex.geometry.x =
+          this.vertex.geometry.x +
+          this.vertex.geometry.width / 2 -
+          nextNode.vertex.geometry.width / 2;
+        nextNode.vertex.geometry.y =
+          this.vertex.geometry.y +
+          this.vertex.geometry.height +
+          this.lineLength;
+      } else {
+        // if (nextNode.row < this.row + 1) {
+        //   if (nextNode instanceof OperationNode) {
+        //     nextNode.down(1);
+        //   }
+        // } else {
+        // }
+      }
+    }
+  }
+
+  back(nextNode: LoopNode) {
+    this.isBack = true;
+    this.backNode = nextNode;
+    if (!this.visited) {
+      this.visited = true;
+
+      this.updateBackEdge();
+    }
+  }
+
+  /**
+   * 当前节点以及其下面的节点都往下走一层
+   * @param num 层数
+   */
+  // down(num: number) {
+  //   this.row += num;
+  //   this.geometry.y += 60;
+
+  //   if (this.isBack) {
+  //     this.updateBackEdge();
+  //   }
+  //   if (this.nextNode instanceof OperationNode) {
+  //     this.nextNode.down(num);
+  //   }
+  // }
+
+  updateBackEdge() {
+    this.backNode.noNodeRow = this.row + 1;
+    this.backNode.endRow = this.row;
+  }
+
+  setY(num: number): void {
+    this.geometry.y = num;
+    if (this.nextNode) {
+      this.nextNode.setY(
+        this.geometry.y + this.geometry.height + this.lineLength,
+      );
+    }
+  }
+
+  drawLine() {
+    if (this.nextNode) {
+      if (this.nextNode.col === this.col) {
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          this.vertex,
+          this.nextNode.vertex,
+        );
+      } else {
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          this.vertex,
+          this.nextNode.vertex,
+        );
+
+        edge.geometry.points = [
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width / 2,
+            this.geometry.y + this.geometry.height,
+          ),
+          new mxgraph.mxPoint(
+            this.geometry.x + this.geometry.width / 2,
+            this.nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            this.nextNode.geometry.x + this.nextNode.geometry.width / 2,
+            this.nextNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            this.nextNode.geometry.x + this.nextNode.geometry.width / 2,
+            this.nextNode.geometry.y,
+          ),
+        ];
+      }
+    }
+
+    if (this.backNode) {
+      console.log(this.backNode.col);
+      let leftMost = this.chart.colMap.get(this.backNode.col);
+      let edge = graph.insertEdge(
+        parent,
+        null,
+        '',
+        this.vertex,
+        this.backNode.vertex,
+      );
+      edge.geometry.points = [
+        new mxgraph.mxPoint(
+          this.leftMost,
+          this.geometry.y + this.geometry.height / 2,
+        ),
+        new mxgraph.mxPoint(
+          leftMost - 20 * this.backNode.loops,
+          this.geometry.y + this.geometry.height / 2,
+        ),
+
+        new mxgraph.mxPoint(
+          leftMost - 20 * this.backNode.loops,
+          edge.target.geometry.y + 20,
+        ),
+        new mxgraph.mxPoint(
+          edge.target.geometry.x + edge.target.geometry.width / 2,
+          edge.target.geometry.y - 20,
+        ),
+        new mxgraph.mxPoint(
+          edge.target.geometry.x + edge.target.geometry.width / 2,
+          edge.target.geometry.y,
+        ),
+      ];
+
+      if (this.backNode.loopNode) {
+        this.backNode.loopNode.loops += 1;
+      }
+    }
+  }
+}
+
+export default OperationNode;

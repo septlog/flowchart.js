@@ -1,0 +1,138 @@
+<mxEditor defaultGroup="group" defaultEdge="connector">
+    <include name="./config/editor-commons.xml"/>
+    <ui>
+        <add as="chart" element="chart"/>
+    </ui>
+    <Array as="templates">
+        <add as="group">
+            <Group label="" href="">
+                <mxCell vertex="1" style="group" connectable="0"/>
+            </Group>
+        </add>
+        <add as="connector">
+            <Connector label="" href="">
+                <mxCell edge="1">
+                    <mxGeometry as="geometry" relative="1"/>
+                </mxCell>
+            </Connector>
+        </add>
+        <add as="container">
+            <Container label="Container" href="">
+                <mxCell vertex="1" style="swimlane" connectable="0">
+                    <mxGeometry as="geometry" width="200" height="200"/>
+                </mxCell>
+            </Container>
+        </add>
+        <add as="rectangle">
+            <Rect label="Rectangle" href="">
+                <mxCell vertex="1">
+                    <mxGeometry as="geometry" width="80" height="40"/>
+                </mxCell>
+            </Rect>
+        </add>
+        <add as="text">
+            <Text label="Text Here" href="">
+                <mxCell vertex="1" style="text">
+                    <mxGeometry as="geometry" width="80" height="20"/>
+                </mxCell>
+            </Text>
+        </add>
+        <add as="image">
+            <Image label="" href="">
+                <mxCell vertex="1" style="image">
+                    <mxGeometry as="geometry" width="80" height="50"/>
+                </mxCell>
+            </Image>
+        </add>
+        <add as="rounded">
+            <Roundrect label="Rounded" href="">
+                <mxCell vertex="1" style="rounded">
+                    <mxGeometry as="geometry" width="80" height="40"/>
+                </mxCell>
+            </Roundrect>
+        </add>
+        <add as="shape">
+            <Shape label="Shape" href="">
+                <mxCell vertex="1" style="ellipse">
+                    <mxGeometry as="geometry" width="60" height="60"/>
+                </mxCell>
+            </Shape>
+        </add>
+        <add as="actor">
+            <Shape label="Shape" href="">
+                <mxCell vertex="1" style="actor">
+                    <mxGeometry as="geometry" width="40" height="60"/>
+                </mxCell>
+            </Shape>
+        </add>
+        <add as="cloud">
+            <Shape label="Shape" href="">
+                <mxCell vertex="1" style="cloud">
+                    <mxGeometry as="geometry" width="80" height="60"/>
+                </mxCell>
+            </Shape>
+        </add>
+        <add as="hline">
+            <Shape label="" href="">
+                <mxCell vertex="1" style="ellipse">
+                    <mxGeometry as="geometry" width="60" height="10"/>
+                </mxCell>
+            </Shape>
+        </add>
+    </Array>
+    <mxGraph as="chart" alternateEdgeStyle="verticalConnector" allowLoops="1" dropEnabled="1">
+        <mxStylesheet as="stylesheet">
+            <add as="text">
+                <add as="shape" value="rectangle"/>
+                <add as="perimeter" value="rectanglePerimeter"/>
+                <add as="fontSize" value="12"/>
+                <add as="align" value="left"/>
+                <add as="verticalAlign" value="top"/>
+                <add as="shadow" value="0"/>
+                <add as="strokeColor" value="none"/>
+                <add as="fillColor" value="none"/>
+                <add as="gradientColor" value="none"/>
+			</add>
+            <add as="defaultVertex" extend="text">
+                <add as="shape" value="rectangle"/>
+                <add as="fontSize" value="11"/>
+                <add as="align" value="center"/>
+                <add as="verticalAlign" value="middle"/>
+                <add as="strokeColor" value="black"/>
+                <add as="fillColor" value="white"/>
+			</add>
+            <add as="defaultEdge">
+                <add as="shape" value="connector"/>
+                <add as="fontSize" value="11"/>
+                <add as="align" value="center"/>
+                <add as="verticalAlign" value="middle"/>
+                <add as="labelBackgroundColor" value="white"/>
+                <add as="strokeColor" value="black"/>
+                <add as="strokeWidth" value="1"/>
+                <add as="edgeStyle" value="elbowEdgeStyle"/>
+                <add as="endArrow" value="classic"/>
+			</add>
+            <add as="rounded">
+                <add as="rounded" value="1"/>
+			</add>
+            <add as="ellipse">
+                <add as="shape" value="ellipse"/>
+                <add as="perimeter" value="ellipsePerimeter"/>
+                <add as="strokeColor" value="#CDEB8B"/>
+                <add as="fillColor" value="#CDEB8B"/>
+			</add>
+            <add as="doubleEllipse" extend="ellipse">
+                <add as="shape" value="doubleEllipse"/>
+			</add>
+            <add as="rhombus">
+                <add as="shape" value="rhombus"/>
+                <add as="perimeter" value="rhombusPerimeter"/>
+                <add as="strokeColor" value="#FFCF8A"/>
+                <add as="fillColor" value="#FFCF8A"/>
+			</add>
+            <add as="hexagon">
+                <add as="shape" value="hexagon"/>
+			</add>
+        </mxStylesheet>
+    </mxGraph>
+</mxEditor>
