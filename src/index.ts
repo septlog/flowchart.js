@@ -87,11 +87,6 @@ op8->loop4
 
 let textarea = document.querySelector('textarea');
 
-// textarea.addEventListener('change', (e: any) => {
-//   console.log('object');
-// });
-// textarea.value = '11 lj';
-
 textarea.addEventListener('input', (e: any) => {
   div.replaceChildren();
   str = e.target.value;

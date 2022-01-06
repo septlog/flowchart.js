@@ -92620,6 +92620,7 @@ var BaseNode = /** @class */ (function () {
     };
     BaseNode.prototype.setY = function (num) { };
     BaseNode.prototype.drawLine = function () { };
+    BaseNode.prototype.down = function (num) { };
     BaseNode.prototype.updateRow = function (row) {
         if (row > this.chart.rows) {
             this.chart.rows = row;
@@ -92748,6 +92749,7 @@ var ConditionNode = /** @class */ (function (_super) {
             }
             if (this.loopNode) {
                 nextNode.loopNode = this.loopNode;
+                this.loopNode.updateRights();
             }
         }
     };
@@ -93005,6 +93007,16 @@ var Chart = /** @class */ (function () {
     }
     Chart.prototype.drawSVG = function () {
         this.constructChart(this.start);
+        console.log(this.nodes);
+        for (var nodeName in this.nodes) {
+            var node = this.nodes[nodeName];
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                var nextNode = node.nextNode;
+                if (nextNode && nextNode.row < node.row + 1) {
+                    nextNode.down(1);
+                }
+            }
+        }
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
             var h = this.rowMap.get(node.row);
@@ -93029,8 +93041,12 @@ var Chart = /** @class */ (function () {
         console.log(this);
         for (var i = 1; i <= this.rows; i++) {
             var nodes = this.findRowNodes(i);
+            console.log(i);
             for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
                 var node = nodes_1[_i];
+                if (node.token.text === '??') {
+                    debugger;
+                }
                 var topNodes = this.findRowNodes(node.row - 1);
                 for (var _a = 0, topNodes_1 = topNodes; _a < topNodes_1.length; _a++) {
                     var topNode = topNodes_1[_a];
@@ -93053,7 +93069,6 @@ var Chart = /** @class */ (function () {
                 }
             }
         }
-        console.log(this.nodes);
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
             if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
@@ -93254,7 +93269,7 @@ function parse(input) {
     for (var l = 1, len = lines.length; l < len;) {
         var currentLine = lines[l];
         if (currentLine.indexOf('->') < 0 && currentLine.indexOf('=>') < 0) {
-            lines[l - 1] += ('\n' + currentLine).trim();
+            lines[l - 1] += '\n' + currentLine;
             lines.splice(l, 1);
             len--;
         }
@@ -93263,7 +93278,7 @@ function parse(input) {
         }
     }
     for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
+        var line = lines[i].trim();
         if (line.indexOf('=>') != -1) {
             var parts = line.split('=>');
             var token = {
@@ -93494,10 +93509,7 @@ var OperationNode = /** @class */ (function (_super) {
             }
             else {
                 // if (nextNode.row < this.row + 1) {
-                //   if (nextNode instanceof OperationNode) {
-                //     nextNode.down(1);
-                //   }
-                // } else {
+                //   nextNode.down(1);
                 // }
             }
         }
@@ -93507,12 +93519,23 @@ var OperationNode = /** @class */ (function (_super) {
         this.backNode = nextNode;
         if (!this.visited) {
             this.visited = true;
-            this.updateBackEdge();
+            this.backNode.noNodeRow = this.row + 1;
+            this.backNode.endRow = this.row;
         }
     };
-    OperationNode.prototype.updateBackEdge = function () {
-        this.backNode.noNodeRow = this.row + 1;
-        this.backNode.endRow = this.row;
+    OperationNode.prototype.down = function (num) {
+        this.row += num;
+        this.updateRow(this.row);
+        if (this.nextNode) {
+            this.nextNode.down(num);
+        }
+        if (this.backNode) {
+            if (this.backNode.noNode) {
+                this.backNode.noNode.down(num);
+                this.backNode.noNodeRow += num;
+                this.updateRow(this.backNode.noNodeRow);
+            }
+        }
     };
     OperationNode.prototype.setY = function (num) {
         this.geometry.y = num;
@@ -93620,10 +93643,6 @@ style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 var parent = graph.getDefaultParent();
 var str = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n\n";
 var textarea = document.querySelector('textarea');
-// textarea.addEventListener('change', (e: any) => {
-//   console.log('object');
-// });
-// textarea.value = '11 lj';
 textarea.addEventListener('input', function (e) {
     div.replaceChildren();
     str = e.target.value;

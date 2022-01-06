@@ -66,6 +66,8 @@ class BaseNode {
 
   drawLine() {}
 
+  down(num: number) {}
+
   updateRow(row: number) {
     if (row > this.chart.rows) {
       this.chart.rows = row;

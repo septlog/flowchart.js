@@ -44,10 +44,7 @@ class OperationNode extends BaseNode {
           this.lineLength;
       } else {
         // if (nextNode.row < this.row + 1) {
-        //   if (nextNode instanceof OperationNode) {
-        //     nextNode.down(1);
-        //   }
-        // } else {
+        //   nextNode.down(1);
         // }
       }
     }
@@ -59,13 +56,25 @@ class OperationNode extends BaseNode {
     if (!this.visited) {
       this.visited = true;
 
-      this.updateBackEdge();
+      this.backNode.noNodeRow = this.row + 1;
+      this.backNode.endRow = this.row;
     }
   }
 
-  updateBackEdge() {
-    this.backNode.noNodeRow = this.row + 1;
-    this.backNode.endRow = this.row;
+  down(num: number): void {
+    this.row += num;
+    this.updateRow(this.row);
+    if (this.nextNode) {
+      this.nextNode.down(num);
+    }
+
+    if (this.backNode) {
+      if (this.backNode.noNode) {
+        this.backNode.noNode.down(num);
+        this.backNode.noNodeRow += num;
+        this.updateRow(this.backNode.noNodeRow);
+      }
+    }
   }
 
   setY(num: number): void {

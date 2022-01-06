@@ -107,6 +107,7 @@ class ConditionNode extends BaseNode {
 
       if (this.loopNode) {
         nextNode.loopNode = this.loopNode;
+        this.loopNode.updateRights();
       }
     }
   }

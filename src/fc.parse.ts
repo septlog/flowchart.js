@@ -43,6 +43,17 @@ export class Chart implements IChart {
   }
   drawSVG() {
     this.constructChart(this.start);
+    console.log(this.nodes);
+
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      if (node instanceof OperationNode) {
+        let nextNode = node.nextNode;
+        if (nextNode && nextNode.row < node.row + 1) {
+          nextNode.down(1);
+        }
+      }
+    }
 
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
@@ -70,8 +81,12 @@ export class Chart implements IChart {
 
     for (let i = 1; i <= this.rows; i++) {
       let nodes = this.findRowNodes(i);
+      console.log(i);
 
       for (let node of nodes) {
+        if (node.token.text === '??') {
+          debugger;
+        }
         let topNodes = this.findRowNodes(node.row - 1);
         for (let topNode of topNodes) {
           if (this.intersectY(topNode, node)) {
@@ -97,8 +112,6 @@ export class Chart implements IChart {
         }
       }
     }
-
-    console.log(this.nodes);
 
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
@@ -349,7 +362,7 @@ function parse(input) {
     let currentLine = lines[l];
 
     if (currentLine.indexOf('->') < 0 && currentLine.indexOf('=>') < 0) {
-      lines[l - 1] += ('\n' + currentLine).trim();
+      lines[l - 1] += '\n' + currentLine;
       lines.splice(l, 1);
       len--;
     } else {
@@ -357,7 +370,7 @@ function parse(input) {
     }
   }
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+    let line = lines[i].trim();
 
     if (line.indexOf('=>') != -1) {
       let parts = line.split('=>');
