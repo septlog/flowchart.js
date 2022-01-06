@@ -93570,8 +93570,12 @@ style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 var parent = graph.getDefaultParent();
-var str = "\nloop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
+var str = "loop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
 var textarea = document.querySelector('textarea');
+// textarea.addEventListener('change', (e: any) => {
+//   console.log('object');
+// });
+// textarea.value = '11 lj';
 textarea.addEventListener('input', function (e) {
     div.replaceChildren();
     str = e.target.value;
@@ -93602,9 +93606,25 @@ textarea.addEventListener('input', function (e) {
     graph.center();
 });
 textarea.value = str;
-var chart = (0,_fc_parse__WEBPACK_IMPORTED_MODULE_0__.parse)(str);
-chart.drawSVG();
-graph.center();
+// let chart = parse(str);
+// chart.drawSVG();
+// graph.center();
+textarea.dispatchEvent(new Event('input'));
+var b1 = document.getElementById('b1');
+var b2 = document.getElementById('b2');
+var b3 = document.getElementById('b3');
+b1.addEventListener('click', function () {
+    textarea.value = "st=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b2.addEventListener('click', function () {
+    textarea.value = "op1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond1(yes)->op1\ncond1(no)->op6\nop1->cond2\ncond2(yes)->op2\ncond2(no)->cond4\ncond4(yes)->op5\nop2->cond3\ncond3(yes)->op3\ncond3(no)->op4\nop3->op7\nop4->op7\nop5->op7\nop6->op7\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b3.addEventListener('click', function () {
+    textarea.value = "loop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
+    textarea.dispatchEvent(new Event('input'));
+});
 
 
 

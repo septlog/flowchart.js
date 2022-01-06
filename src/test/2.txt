@@ -8,14 +8,7 @@ op7=>operation: 语句7
 cond1=>condition: 条件1
 cond2=>condition: 条件2
 cond3=>condition: 条件3
-cond4=>condition: 条件4条件4条件4条件4
-条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4条件4
-条件4条件4条件4条件4
-条件4条件4条件4条件4
-条件4条件4条件4条件4条件4条件4条件4条件4
-条件4条件4条件4条件4
-条件4条件4条件4条件4
-条件4条件4条件4条件4
+cond4=>condition: 条件4
 cond1(yes)->op1
 cond1(no)->op6
 op1->cond2
