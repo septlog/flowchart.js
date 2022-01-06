@@ -107,7 +107,7 @@ export class Chart implements IChart {
         node.drawLine();
         let w = 0;
 
-        for (let i = node.row + 1; i <= node.endRow; i++) {
+        for (let i = node.row; i <= node.endRow; i++) {
           let childRowNodes = this.findRowNodes(i);
           for (let childRowNode of childRowNodes) {
             if (childRowNode.col === node.width) {
@@ -117,7 +117,12 @@ export class Chart implements IChart {
             }
           }
         }
-        console.log(w);
+
+        if (w + 20 * node.rights > node.geometry.x + node.geometry.width) {
+          w += 20 * node.rights;
+        } else {
+          w = node.geometry.x + node.geometry.width + 20;
+        }
 
         let edge = graph.insertEdge(
           parent,
@@ -132,11 +137,8 @@ export class Chart implements IChart {
             node.geometry.x + node.geometry.width,
             node.geometry.y + node.geometry.height / 2,
           ),
-          new mxgraph.mxPoint(
-            w + 20,
-            node.geometry.y + node.geometry.height / 2,
-          ),
-          new mxgraph.mxPoint(w + 20, node.noNode.geometry.y - 20),
+          new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+          new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
           new mxgraph.mxPoint(
             node.noNode.geometry.x + node.noNode.geometry.width / 2,
             node.noNode.geometry.y - 20,
@@ -146,6 +148,61 @@ export class Chart implements IChart {
             node.noNode.geometry.y,
           ),
         ];
+      } else if (node instanceof OperationNode) {
+        // node.drawLine();
+
+        if (node.backNode) {
+          node.drawLine();
+          let w = node.geometry.x;
+
+          for (let i = node.loopNode.row; i <= node.row; i++) {
+            let childRowNodes = this.findRowNodes(i);
+            for (let childRowNode of childRowNodes) {
+              if (childRowNode.col === node.col) {
+                if (childRowNode.geometry.x < w) {
+                  w = childRowNode.geometry.x;
+                }
+              }
+            }
+          }
+
+          let edge = graph.insertEdge(
+            parent,
+            null,
+            '',
+            node.vertex,
+            node.backNode.vertex,
+          );
+          edge.geometry.points = [
+            new mxgraph.mxPoint(
+              node.leftMost,
+              node.geometry.y + node.geometry.height / 2,
+            ),
+            new mxgraph.mxPoint(
+              w - 20 * node.backNode.loops,
+              node.geometry.y + node.geometry.height / 2,
+            ),
+
+            new mxgraph.mxPoint(
+              w - 20 * node.backNode.loops,
+              edge.target.geometry.y + 20,
+            ),
+            new mxgraph.mxPoint(
+              edge.target.geometry.x + edge.target.geometry.width / 2,
+              edge.target.geometry.y - 20,
+            ),
+            new mxgraph.mxPoint(
+              edge.target.geometry.x + edge.target.geometry.width / 2,
+              edge.target.geometry.y,
+            ),
+          ];
+
+          if (node.backNode.loopNode) {
+            node.backNode.loopNode.updateLoops();
+          }
+        } else {
+          node.drawLine();
+        }
       } else {
         node.drawLine();
       }
@@ -292,7 +349,7 @@ function parse(input) {
     let currentLine = lines[l];
 
     if (currentLine.indexOf('->') < 0 && currentLine.indexOf('=>') < 0) {
-      lines[l - 1] += '\n' + currentLine;
+      lines[l - 1] += ('\n' + currentLine).trim();
       lines.splice(l, 1);
       len--;
     } else {

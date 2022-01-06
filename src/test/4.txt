@@ -1,0 +1,29 @@
+loop1=>loop: i<10
+op1=>operation: 语句1
+loop2=>loop: j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20
+op2=>operation: j++
+j++
+j++
+j++
+j++
+j++
+j++
+j++
+j++
+op3=>operation: i++
+i++
+i++
+i++
+i++
+i++
+op4=>operation: 语句2语句2语句2语句2语句2语句2语句2语句2
+语句2语句2语句2语句2语句2语句2语句2语句2
+语句2语句2语句2语句2语句2语句2语句2语句2
+语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2
+loop1(yes)->op1
+op1->loop2
+loop2(yes)->op2
+op2->loop2
+loop2(no)->op3
+op3->loop1
+loop1(no)->op4

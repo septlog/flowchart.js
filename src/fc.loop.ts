@@ -6,11 +6,15 @@ class LoopNode extends BaseNode {
   yesNode: BaseNode;
   noNode: BaseNode;
   width: number = 1;
+  lRange: number = 0;
+  rRange: number = 0;
   yesVisited: boolean = false;
   noVisited: boolean = false;
   noNodeRow: number = 1;
   endRow: number = 0;
   loops = 1;
+
+  rights = 1;
 
   constructor(token: Token, chart: Chart) {
     super(token, chart);
@@ -57,13 +61,6 @@ class LoopNode extends BaseNode {
           this.geometry.width / 2 -
           nextNode.geometry.width / 2;
         nextNode.geometry.y = this.bottomMost + this.lineLength;
-        // let edge = graph.insertEdge(
-        //   parent,
-        //   null,
-        //   '是',
-        //   this.vertex,
-        //   nextNode.vertex,
-        // );
       }
     }
   }
@@ -86,6 +83,8 @@ class LoopNode extends BaseNode {
           nextNode.geometry.width / 2;
       }
     }
+
+    this.updateRights();
   }
 
   updateNoNode() {}
@@ -93,6 +92,19 @@ class LoopNode extends BaseNode {
   drawLine(): void {
     if (this.yesNode) {
       graph.insertEdge(parent, null, '', this.vertex, this.yesNode.vertex);
+    }
+  }
+
+  updateLoops() {
+    this.loops += 1;
+    if (this.loopNode) {
+      this.loopNode.updateLoops();
+    }
+  }
+  updateRights() {
+    if (this.loopNode) {
+      this.loopNode.rights++;
+      this.loopNode.updateRights();
     }
   }
 }

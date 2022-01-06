@@ -92886,11 +92886,14 @@ var LoopNode = /** @class */ (function (_super) {
     function LoopNode(token, chart) {
         var _this = _super.call(this, token, chart) || this;
         _this.width = 1;
+        _this.lRange = 0;
+        _this.rRange = 0;
         _this.yesVisited = false;
         _this.noVisited = false;
         _this.noNodeRow = 1;
         _this.endRow = 0;
         _this.loops = 1;
+        _this.rights = 1;
         var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
@@ -92919,13 +92922,6 @@ var LoopNode = /** @class */ (function (_super) {
                         this.geometry.width / 2 -
                         nextNode.geometry.width / 2;
                 nextNode.geometry.y = this.bottomMost + this.lineLength;
-                // let edge = graph.insertEdge(
-                //   parent,
-                //   null,
-                //   '是',
-                //   this.vertex,
-                //   nextNode.vertex,
-                // );
             }
         }
     };
@@ -92944,11 +92940,24 @@ var LoopNode = /** @class */ (function (_super) {
                         nextNode.geometry.width / 2;
             }
         }
+        this.updateRights();
     };
     LoopNode.prototype.updateNoNode = function () { };
     LoopNode.prototype.drawLine = function () {
         if (this.yesNode) {
             ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, this.yesNode.vertex);
+        }
+    };
+    LoopNode.prototype.updateLoops = function () {
+        this.loops += 1;
+        if (this.loopNode) {
+            this.loopNode.updateLoops();
+        }
+    };
+    LoopNode.prototype.updateRights = function () {
+        if (this.loopNode) {
+            this.loopNode.rights++;
+            this.loopNode.updateRights();
         }
     };
     return LoopNode;
@@ -93050,7 +93059,7 @@ var Chart = /** @class */ (function () {
             if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
                 node.drawLine();
                 var w = 0;
-                for (var i = node.row + 1; i <= node.endRow; i++) {
+                for (var i = node.row; i <= node.endRow; i++) {
                     var childRowNodes = this.findRowNodes(i);
                     for (var _d = 0, childRowNodes_1 = childRowNodes; _d < childRowNodes_1.length; _d++) {
                         var childRowNode = childRowNodes_1[_d];
@@ -93061,15 +93070,52 @@ var Chart = /** @class */ (function () {
                         }
                     }
                 }
-                console.log(w);
+                if (w + 20 * node.rights > node.geometry.x + node.geometry.width) {
+                    w += 20 * node.rights;
+                }
+                else {
+                    w = node.geometry.x + node.geometry.width + 20;
+                }
                 var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.noNode.vertex);
                 edge.geometry.points = [
                     new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.geometry.x + node.geometry.width, node.geometry.y + node.geometry.height / 2),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w + 20, node.geometry.y + node.geometry.height / 2),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w + 20, node.noNode.geometry.y - 20),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
                     new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y - 20),
                     new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y),
                 ];
+            }
+            else if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                // node.drawLine();
+                if (node.backNode) {
+                    node.drawLine();
+                    var w = node.geometry.x;
+                    for (var i = node.loopNode.row; i <= node.row; i++) {
+                        var childRowNodes = this.findRowNodes(i);
+                        for (var _e = 0, childRowNodes_2 = childRowNodes; _e < childRowNodes_2.length; _e++) {
+                            var childRowNode = childRowNodes_2[_e];
+                            if (childRowNode.col === node.col) {
+                                if (childRowNode.geometry.x < w) {
+                                    w = childRowNode.geometry.x;
+                                }
+                            }
+                        }
+                    }
+                    var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.backNode.vertex);
+                    edge.geometry.points = [
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.leftMost, node.geometry.y + node.geometry.height / 2),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w - 20 * node.backNode.loops, node.geometry.y + node.geometry.height / 2),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w - 20 * node.backNode.loops, edge.target.geometry.y + 20),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y - 20),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y),
+                    ];
+                    if (node.backNode.loopNode) {
+                        node.backNode.loopNode.updateLoops();
+                    }
+                }
+                else {
+                    node.drawLine();
+                }
             }
             else {
                 node.drawLine();
@@ -93208,7 +93254,7 @@ function parse(input) {
     for (var l = 1, len = lines.length; l < len;) {
         var currentLine = lines[l];
         if (currentLine.indexOf('->') < 0 && currentLine.indexOf('=>') < 0) {
-            lines[l - 1] += '\n' + currentLine;
+            lines[l - 1] += ('\n' + currentLine).trim();
             lines.splice(l, 1);
             len--;
         }
@@ -93464,20 +93510,6 @@ var OperationNode = /** @class */ (function (_super) {
             this.updateBackEdge();
         }
     };
-    /**
-     * 当前节点以及其下面的节点都往下走一层
-     * @param num 层数
-     */
-    // down(num: number) {
-    //   this.row += num;
-    //   this.geometry.y += 60;
-    //   if (this.isBack) {
-    //     this.updateBackEdge();
-    //   }
-    //   if (this.nextNode instanceof OperationNode) {
-    //     this.nextNode.down(num);
-    //   }
-    // }
     OperationNode.prototype.updateBackEdge = function () {
         this.backNode.noNodeRow = this.row + 1;
         this.backNode.endRow = this.row;
@@ -93503,21 +93535,37 @@ var OperationNode = /** @class */ (function (_super) {
                 ];
             }
         }
-        if (this.backNode) {
-            console.log(this.backNode.col);
-            var leftMost = this.chart.colMap.get(this.backNode.col);
-            var edge = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, this.backNode.vertex);
-            edge.geometry.points = [
-                new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(this.leftMost, this.geometry.y + this.geometry.height / 2),
-                new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(leftMost - 20 * this.backNode.loops, this.geometry.y + this.geometry.height / 2),
-                new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(leftMost - 20 * this.backNode.loops, edge.target.geometry.y + 20),
-                new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y - 20),
-                new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y),
-            ];
-            if (this.backNode.loopNode) {
-                this.backNode.loopNode.loops += 1;
-            }
-        }
+        // if (this.backNode) {
+        //   let leftMost = this.chart.colMap.get(this.backNode.col);
+        //   let edge = graph.insertEdge(
+        //     parent,
+        //     null,
+        //     '',
+        //     this.vertex,
+        //     this.backNode.vertex,
+        //   );
+        //   edge.geometry.points = [
+        //     new mxgraph.mxPoint(
+        //       this.leftMost,
+        //       this.geometry.y + this.geometry.height / 2,
+        //     ),
+        //     new mxgraph.mxPoint(
+        //       leftMost - 20 * this.backNode.loops,
+        //       this.geometry.y + this.geometry.height / 2,
+        //     ),
+        //     new mxgraph.mxPoint(
+        //       leftMost - 20 * this.backNode.loops,
+        //       edge.target.geometry.y + 20,
+        //     ),
+        //     new mxgraph.mxPoint(
+        //       edge.target.geometry.x + edge.target.geometry.width / 2,
+        //       edge.target.geometry.y - 20,
+        //     ),
+        //     new mxgraph.mxPoint(
+        //       edge.target.geometry.x + edge.target.geometry.width / 2,
+        //       edge.target.geometry.y,
+        //     ),
+        //   ];
     };
     return OperationNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -93570,7 +93618,7 @@ style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 var parent = graph.getDefaultParent();
-var str = "loop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
+var str = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n\n";
 var textarea = document.querySelector('textarea');
 // textarea.addEventListener('change', (e: any) => {
 //   console.log('object');

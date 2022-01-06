@@ -35,18 +35,54 @@ style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 let parent = graph.getDefaultParent();
 
 let str = `loop1=>loop: i<10
+loop2=>loop: j<20j<20j<20j<20j<20j<20j<20
+loop3=>loop: k<30k<30k<30k<30k<30k<30k<30
+loop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5
 op1=>operation: 语句1
-loop2=>loop: j<20
-op2=>operation: j++
-op3=>operation: i++
-op4=>operation: 语句2
+op2=>operation: 语句2
+op3=>operation: 语句3
+op4=>operation: 语句4
+op9=>operation: ??
+op5=>operation: k++
+op6=>operation: j++
+op7=>operation: i++
+op8=>operation: h++
+op10=>operation: 语句5
+op11=>operation: 语句6
+op12=>operation: 语句7
+cond1=>condition: 条件A
+cond2=>condition: 条件B
+loop4(yes)->loop1
+loop4(no)->op9
 loop1(yes)->op1
-op1->loop2
-loop2(yes)->op2
-op2->loop2
-loop2(no)->op3
-op3->loop1
 loop1(no)->op4
+loop2(yes)->op2
+loop2(no)->op7
+loop3(yes)->op3
+loop3(no)->op6
+op1->loop2
+op2->loop3
+op3->cond1
+cond1(yes)->op10
+
+cond1(no)->cond2
+
+cond2(yes)->op11
+
+cond2(no)->op12
+op12->op5
+
+
+
+op10->op5
+
+op11->op5
+op5->loop3
+op6->loop2
+op7->loop1
+op4->op8
+op8->loop4
+
 `;
 
 let textarea = document.querySelector('textarea');
