@@ -32,7 +32,6 @@ export class Chart implements IChart {
   tokens = null;
   start = null;
   nodes: { [key: string]: BaseNode } = null;
-  diagram = null;
   rows: number = 1;
   cols: number = 1;
 
@@ -41,12 +40,8 @@ export class Chart implements IChart {
   constructor() {
     this.tokens = {};
     this.nodes = {};
-    this.diagram = null;
   }
-  drawSVG(container: HTMLElement, options?: any) {
-    if (this.diagram) {
-      this.diagram.clean();
-    }
+  drawSVG() {
     this.constructChart(this.start);
 
     for (let nodeName in this.nodes) {
