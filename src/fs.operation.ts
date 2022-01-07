@@ -21,12 +21,14 @@ class OperationNode extends BaseNode {
   then(nextNode: BaseNode) {
     if (!this.visited) {
       this.visited = true;
-      nextNode.loopNode = this.loopNode;
-      nextNode.condNode = this.condNode;
+
       this.nextNode = nextNode;
 
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.loopNode = this.loopNode;
+        nextNode.condNode = this.condNode;
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
@@ -44,8 +46,16 @@ class OperationNode extends BaseNode {
           this.lineLength;
       } else {
         // if (nextNode.row < this.row + 1) {
-        //   nextNode.down(1);
+        //   nextNode.down(this.row - nextNode.row);
         // }
+        // console.log(nextNode.condNode);
+        // console.log(this.condNode);
+        // if (nextNode.condNode === this.condNode) {
+        //   console.log(true);
+        // }
+        if (this.condNode) {
+          this.condNode.endRow = nextNode.row;
+        }
       }
     }
   }
@@ -72,6 +82,7 @@ class OperationNode extends BaseNode {
       if (this.backNode.noNode) {
         this.backNode.noNode.down(num);
         this.backNode.noNodeRow += num;
+        this.backNode.endRow = this.row;
         this.updateRow(this.backNode.noNodeRow);
       }
     }
@@ -125,39 +136,6 @@ class OperationNode extends BaseNode {
         ];
       }
     }
-
-    // if (this.backNode) {
-    //   let leftMost = this.chart.colMap.get(this.backNode.col);
-    //   let edge = graph.insertEdge(
-    //     parent,
-    //     null,
-    //     '',
-    //     this.vertex,
-    //     this.backNode.vertex,
-    //   );
-    //   edge.geometry.points = [
-    //     new mxgraph.mxPoint(
-    //       this.leftMost,
-    //       this.geometry.y + this.geometry.height / 2,
-    //     ),
-    //     new mxgraph.mxPoint(
-    //       leftMost - 20 * this.backNode.loops,
-    //       this.geometry.y + this.geometry.height / 2,
-    //     ),
-
-    //     new mxgraph.mxPoint(
-    //       leftMost - 20 * this.backNode.loops,
-    //       edge.target.geometry.y + 20,
-    //     ),
-    //     new mxgraph.mxPoint(
-    //       edge.target.geometry.x + edge.target.geometry.width / 2,
-    //       edge.target.geometry.y - 20,
-    //     ),
-    //     new mxgraph.mxPoint(
-    //       edge.target.geometry.x + edge.target.geometry.width / 2,
-    //       edge.target.geometry.y,
-    //     ),
-    //   ];
   }
 }
 

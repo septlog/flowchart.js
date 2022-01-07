@@ -50,7 +50,7 @@ export class Chart implements IChart {
       if (node instanceof OperationNode) {
         let nextNode = node.nextNode;
         if (nextNode && nextNode.row < node.row + 1) {
-          nextNode.down(1);
+          nextNode.down(node.row + 1 - nextNode.row);
         }
       }
     }
@@ -81,12 +81,8 @@ export class Chart implements IChart {
 
     for (let i = 1; i <= this.rows; i++) {
       let nodes = this.findRowNodes(i);
-      console.log(i);
 
       for (let node of nodes) {
-        if (node.token.text === '??') {
-          debugger;
-        }
         let topNodes = this.findRowNodes(node.row - 1);
         for (let topNode of topNodes) {
           if (this.intersectY(topNode, node)) {
@@ -103,11 +99,22 @@ export class Chart implements IChart {
       for (let node of nodes) {
         let leftNodes = this.findColNodes(node.col - 1);
 
+        // if (node.condNode) {
+        //   leftNodes = leftNodes.filter((leftNode) => {
+        //     return (
+        //       leftNode.row > node.condNode.row &&
+        //       leftNode.row < node.condNode.endRow
+        //     );
+        //   });
+        // }
         for (let leftNode of leftNodes) {
           if (this.intersectX(leftNode, node)) {
             node.setX(
               leftNode.geometry.x + leftNode.geometry.width + node.lineLength,
             );
+
+            if (node.condNode) {
+            }
           }
         }
       }
@@ -123,11 +130,11 @@ export class Chart implements IChart {
         for (let i = node.row; i <= node.endRow; i++) {
           let childRowNodes = this.findRowNodes(i);
           for (let childRowNode of childRowNodes) {
-            if (childRowNode.col === node.width) {
-              if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
-                w = childRowNode.geometry.x + childRowNode.geometry.width;
-              }
+            // if (childRowNode.col === node.width) {
+            if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
+              w = childRowNode.geometry.x + childRowNode.geometry.width;
             }
+            // }
           }
         }
 
@@ -216,6 +223,8 @@ export class Chart implements IChart {
         } else {
           node.drawLine();
         }
+      } else if (node instanceof ConditionNode) {
+        node.drawLine();
       } else {
         node.drawLine();
       }
@@ -306,7 +315,7 @@ export class Chart implements IChart {
     }
   }
 
-  findColNodes(x: number) {
+  findColNodes(x: number): BaseNode[] {
     let nodes = [];
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
@@ -331,7 +340,7 @@ export class Chart implements IChart {
   }
 
   intersectX(leftNode: BaseNode, rightNode: BaseNode) {
-    if (rightNode.geometry.x < leftNode.geometry.x + leftNode.geometry.width) {
+    if (rightNode.geometry.x <= leftNode.geometry.x + leftNode.geometry.width) {
       return true;
     }
   }

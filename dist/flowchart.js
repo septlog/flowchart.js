@@ -92676,6 +92676,7 @@ var ConditionNode = /** @class */ (function (_super) {
         _this.yesVisited = false;
         _this.noVisited = false;
         _this.conds = 1;
+        _this.endRow = 0;
         var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, token.text, 0, 0, 0, 0, 'shape=rhombus');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_0__.graph.updateCellSize(vertex, true);
@@ -92702,13 +92703,6 @@ var ConditionNode = /** @class */ (function (_super) {
                     this.vertex.geometry.y +
                         this.vertex.geometry.height +
                         this.lineLength;
-                // let edge = graph.insertEdge(
-                //   parent,
-                //   null,
-                //   '是',
-                //   this.vertex,
-                //   nextNode.vertex,
-                // );
             }
             if (this.loopNode) {
                 nextNode.loopNode = this.loopNode;
@@ -92723,9 +92717,10 @@ var ConditionNode = /** @class */ (function (_super) {
         if (!this.noVisited) {
             this.noVisited = true;
             this.updateCols();
-            nextNode.loopNode = this.loopNode;
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                nextNode.loopNode = this.loopNode;
+                nextNode.condNode = this;
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col + this.conds;
                 this.updateRow(nextNode.row);
@@ -92739,16 +92734,10 @@ var ConditionNode = /** @class */ (function (_super) {
                     this.vertex.geometry.y +
                         this.vertex.geometry.height +
                         this.lineLength;
-                // let edge = graph.insertEdge(
-                //   parent,
-                //   null,
-                //   '否',
-                //   this.vertex,
-                //   nextNode.vertex,
-                // );
             }
             if (this.loopNode) {
                 nextNode.loopNode = this.loopNode;
+                this.loopNode.rights++;
                 this.loopNode.updateRights();
             }
         }
@@ -92797,6 +92786,7 @@ var ConditionNode = /** @class */ (function (_super) {
             }
         }
     };
+    ConditionNode.prototype.updateEndRow = function () { };
     return ConditionNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ConditionNode);
@@ -92888,8 +92878,6 @@ var LoopNode = /** @class */ (function (_super) {
     function LoopNode(token, chart) {
         var _this = _super.call(this, token, chart) || this;
         _this.width = 1;
-        _this.lRange = 0;
-        _this.rRange = 0;
         _this.yesVisited = false;
         _this.noVisited = false;
         _this.noNodeRow = 1;
@@ -93013,7 +93001,7 @@ var Chart = /** @class */ (function () {
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var nextNode = node.nextNode;
                 if (nextNode && nextNode.row < node.row + 1) {
-                    nextNode.down(1);
+                    nextNode.down(node.row + 1 - nextNode.row);
                 }
             }
         }
@@ -93041,12 +93029,8 @@ var Chart = /** @class */ (function () {
         console.log(this);
         for (var i = 1; i <= this.rows; i++) {
             var nodes = this.findRowNodes(i);
-            console.log(i);
             for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
                 var node = nodes_1[_i];
-                if (node.token.text === '??') {
-                    debugger;
-                }
                 var topNodes = this.findRowNodes(node.row - 1);
                 for (var _a = 0, topNodes_1 = topNodes; _a < topNodes_1.length; _a++) {
                     var topNode = topNodes_1[_a];
@@ -93061,10 +93045,20 @@ var Chart = /** @class */ (function () {
             for (var _b = 0, nodes_2 = nodes; _b < nodes_2.length; _b++) {
                 var node = nodes_2[_b];
                 var leftNodes = this.findColNodes(node.col - 1);
+                // if (node.condNode) {
+                //   leftNodes = leftNodes.filter((leftNode) => {
+                //     return (
+                //       leftNode.row > node.condNode.row &&
+                //       leftNode.row < node.condNode.endRow
+                //     );
+                //   });
+                // }
                 for (var _c = 0, leftNodes_1 = leftNodes; _c < leftNodes_1.length; _c++) {
                     var leftNode = leftNodes_1[_c];
                     if (this.intersectX(leftNode, node)) {
                         node.setX(leftNode.geometry.x + leftNode.geometry.width + node.lineLength);
+                        if (node.condNode) {
+                        }
                     }
                 }
             }
@@ -93078,11 +93072,11 @@ var Chart = /** @class */ (function () {
                     var childRowNodes = this.findRowNodes(i);
                     for (var _d = 0, childRowNodes_1 = childRowNodes; _d < childRowNodes_1.length; _d++) {
                         var childRowNode = childRowNodes_1[_d];
-                        if (childRowNode.col === node.width) {
-                            if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
-                                w = childRowNode.geometry.x + childRowNode.geometry.width;
-                            }
+                        // if (childRowNode.col === node.width) {
+                        if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
+                            w = childRowNode.geometry.x + childRowNode.geometry.width;
                         }
+                        // }
                     }
                 }
                 if (w + 20 * node.rights > node.geometry.x + node.geometry.width) {
@@ -93131,6 +93125,9 @@ var Chart = /** @class */ (function () {
                 else {
                     node.drawLine();
                 }
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                node.drawLine();
             }
             else {
                 node.drawLine();
@@ -93241,7 +93238,7 @@ var Chart = /** @class */ (function () {
         return nodes;
     };
     Chart.prototype.intersectX = function (leftNode, rightNode) {
-        if (rightNode.geometry.x < leftNode.geometry.x + leftNode.geometry.width) {
+        if (rightNode.geometry.x <= leftNode.geometry.x + leftNode.geometry.width) {
             return true;
         }
     };
@@ -93489,11 +93486,11 @@ var OperationNode = /** @class */ (function (_super) {
     OperationNode.prototype.then = function (nextNode) {
         if (!this.visited) {
             this.visited = true;
-            nextNode.loopNode = this.loopNode;
-            nextNode.condNode = this.condNode;
             this.nextNode = nextNode;
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                nextNode.loopNode = this.loopNode;
+                nextNode.condNode = this.condNode;
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col;
                 this.updateRow(nextNode.row);
@@ -93509,8 +93506,16 @@ var OperationNode = /** @class */ (function (_super) {
             }
             else {
                 // if (nextNode.row < this.row + 1) {
-                //   nextNode.down(1);
+                //   nextNode.down(this.row - nextNode.row);
                 // }
+                // console.log(nextNode.condNode);
+                // console.log(this.condNode);
+                // if (nextNode.condNode === this.condNode) {
+                //   console.log(true);
+                // }
+                if (this.condNode) {
+                    this.condNode.endRow = nextNode.row;
+                }
             }
         }
     };
@@ -93533,6 +93538,7 @@ var OperationNode = /** @class */ (function (_super) {
             if (this.backNode.noNode) {
                 this.backNode.noNode.down(num);
                 this.backNode.noNodeRow += num;
+                this.backNode.endRow = this.row;
                 this.updateRow(this.backNode.noNodeRow);
             }
         }
@@ -93558,37 +93564,6 @@ var OperationNode = /** @class */ (function (_super) {
                 ];
             }
         }
-        // if (this.backNode) {
-        //   let leftMost = this.chart.colMap.get(this.backNode.col);
-        //   let edge = graph.insertEdge(
-        //     parent,
-        //     null,
-        //     '',
-        //     this.vertex,
-        //     this.backNode.vertex,
-        //   );
-        //   edge.geometry.points = [
-        //     new mxgraph.mxPoint(
-        //       this.leftMost,
-        //       this.geometry.y + this.geometry.height / 2,
-        //     ),
-        //     new mxgraph.mxPoint(
-        //       leftMost - 20 * this.backNode.loops,
-        //       this.geometry.y + this.geometry.height / 2,
-        //     ),
-        //     new mxgraph.mxPoint(
-        //       leftMost - 20 * this.backNode.loops,
-        //       edge.target.geometry.y + 20,
-        //     ),
-        //     new mxgraph.mxPoint(
-        //       edge.target.geometry.x + edge.target.geometry.width / 2,
-        //       edge.target.geometry.y - 20,
-        //     ),
-        //     new mxgraph.mxPoint(
-        //       edge.target.geometry.x + edge.target.geometry.width / 2,
-        //       edge.target.geometry.y,
-        //     ),
-        //   ];
     };
     return OperationNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -93671,6 +93646,9 @@ textarea.addEventListener('input', function (e) {
     var chart = (0,_fc_parse__WEBPACK_IMPORTED_MODULE_0__.parse)(str);
     chart.drawSVG();
     graph.center();
+    graph.center();
+    graph.center();
+    graph.center();
 });
 textarea.value = str;
 // let chart = parse(str);
@@ -93680,6 +93658,8 @@ textarea.dispatchEvent(new Event('input'));
 var b1 = document.getElementById('b1');
 var b2 = document.getElementById('b2');
 var b3 = document.getElementById('b3');
+var b4 = document.getElementById('b4');
+var b5 = document.getElementById('b5');
 b1.addEventListener('click', function () {
     textarea.value = "st=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
     textarea.dispatchEvent(new Event('input'));
@@ -93690,6 +93670,14 @@ b2.addEventListener('click', function () {
 });
 b3.addEventListener('click', function () {
     textarea.value = "loop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b4.addEventListener('click', function () {
+    textarea.value = "cond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond5=>condition: \u6761\u4EF65\ncond6=>condition: \u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\ncond7=>condition: \u6761\u4EF67\ncond8=>condition: \u6761\u4EF68\ncond9=>condition: \u6761\u4EF69\n\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nop10=>operation: \u8BED\u53E510\nop11=>operation: \u8BED\u53E511\nop12=>operation: \u8BED\u53E512\nop13=>operation: \u8BED\u53E513\n\n\ncond1(yes)->op1\ncond1(no)->op11\ncond2(yes)->op2\ncond2(no)->cond9\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->cond5\ncond4(no)->op9\ncond5(yes)->op4\ncond5(no)->cond8\ncond6(yes)->op5\ncond6(no)->cond7\ncond7(yes)->op6\ncond7(no)->op7\ncond8(yes)->op8\ncond9(yes)->op10\n\nop1->cond2\nop2->cond3\nop3->op13\nop4->cond6\nop5->op12\nop6->op12\nop7->op12\nop8->op12\nop9->op13\nop10->op13\nop11->op13\nop12->op13\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b5.addEventListener('click', function () {
+    textarea.value = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n";
     textarea.dispatchEvent(new Event('input'));
 });
 

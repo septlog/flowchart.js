@@ -1,0 +1,54 @@
+cond1=>condition: 条件1
+cond2=>condition: 条件2
+cond3=>condition: 条件3
+cond4=>condition: 条件4
+cond5=>condition: 条件5
+cond6=>condition: 条件6
+cond7=>condition: 条件7
+cond8=>condition: 条件8
+cond9=>condition: 条件9
+
+op1=>operation: 语句1
+op2=>operation: 语句2
+op3=>operation: 语句3
+op4=>operation: 语句4
+op5=>operation: 语句5
+op6=>operation: 语句6
+op7=>operation: 语句7
+op8=>operation: 语句8
+op9=>operation: 语句9
+op10=>operation: 语句10
+op11=>operation: 语句11
+op12=>operation: 语句12
+op13=>operation: 语句13
+
+
+cond1(yes)->op1
+cond1(no)->op11
+cond2(yes)->op2
+cond2(no)->cond9
+cond3(yes)->op3
+cond3(no)->cond4
+cond4(yes)->cond5
+cond4(no)->op9
+cond5(yes)->op4
+cond5(no)->cond8
+cond6(yes)->op5
+cond6(no)->cond7
+cond7(yes)->op6
+cond7(no)->op7
+cond8(yes)->op8
+cond9(yes)->op10
+
+op1->cond2
+op2->cond3
+op3->op13
+op4->cond6
+op5->op12
+op6->op12
+op7->op12
+op8->op12
+op9->op13
+op10->op13
+op11->op13
+op12->op13

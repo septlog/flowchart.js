@@ -6,8 +6,6 @@ class LoopNode extends BaseNode {
   yesNode: BaseNode;
   noNode: BaseNode;
   width: number = 1;
-  lRange: number = 0;
-  rRange: number = 0;
   yesVisited: boolean = false;
   noVisited: boolean = false;
   noNodeRow: number = 1;

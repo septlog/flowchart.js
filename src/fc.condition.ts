@@ -12,6 +12,7 @@ class ConditionNode extends BaseNode {
   noVisited: boolean = false;
 
   conds: number = 1;
+  endRow: number = 0;
   constructor(token: Token, chart: Chart) {
     super(token, chart);
     let vertex = graph.insertVertex(
@@ -53,13 +54,6 @@ class ConditionNode extends BaseNode {
           this.vertex.geometry.y +
           this.vertex.geometry.height +
           this.lineLength;
-        // let edge = graph.insertEdge(
-        //   parent,
-        //   null,
-        //   '是',
-        //   this.vertex,
-        //   nextNode.vertex,
-        // );
       }
 
       if (this.loopNode) {
@@ -76,9 +70,12 @@ class ConditionNode extends BaseNode {
     if (!this.noVisited) {
       this.noVisited = true;
       this.updateCols();
-      nextNode.loopNode = this.loopNode;
+
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.loopNode = this.loopNode;
+        nextNode.condNode = this;
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col + this.conds;
@@ -96,17 +93,11 @@ class ConditionNode extends BaseNode {
           this.vertex.geometry.y +
           this.vertex.geometry.height +
           this.lineLength;
-        // let edge = graph.insertEdge(
-        //   parent,
-        //   null,
-        //   '否',
-        //   this.vertex,
-        //   nextNode.vertex,
-        // );
       }
 
       if (this.loopNode) {
         nextNode.loopNode = this.loopNode;
+        this.loopNode.rights++;
         this.loopNode.updateRights();
       }
     }
@@ -185,6 +176,8 @@ class ConditionNode extends BaseNode {
       }
     }
   }
+
+  updateEndRow() {}
 }
 
 export default ConditionNode;
