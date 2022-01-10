@@ -10,7 +10,6 @@ class BaseNode {
   visited: boolean = false;
   placed: boolean = false;
   nextNode: BaseNode;
-  prev: BaseNode[] = [];
   edge;
   token: Token;
   loopNode: LoopNode;

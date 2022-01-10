@@ -98,7 +98,6 @@ textarea.addEventListener('input', (e: any) => {
   graph.setDisconnectOnMove(false);
   // graph.cellsSelectable = true;
   // graph.autoSizeCells = true;
-  // mxgraph.mxText.textWidthPadding = 30;
   mxgraph.mxGraphHandler.guidesEnabled = true;
   mxgraph.mxEdgeHandler.snapToTerminals = true;
 
@@ -121,8 +120,7 @@ textarea.addEventListener('input', (e: any) => {
   chart.drawSVG();
   graph.center();
   graph.center();
-  graph.center();
-  graph.center();
+  console.log(graph);
 });
 
 textarea.value = str;

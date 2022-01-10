@@ -23,10 +23,16 @@ class ConditionNode extends BaseNode {
       0,
       0,
       0,
-      'shape=rhombus',
+      'shape=rhombus;spacing=10',
     );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);
+    console.log(graph.view.getState(vertex));
+    let boundW = graph.view.getState(vertex).cellBounds.width;
+    let boundH = graph.view.getState(vertex).cellBounds.height;
+    let a = Math.round(Math.sqrt(boundW * boundH));
+    // vertex.geometry.width += 2 * a;
+    // vertex.geometry.height += 2 * a;
   }
 
   yes(nextNode: BaseNode) {

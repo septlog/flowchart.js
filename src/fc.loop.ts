@@ -24,14 +24,16 @@ class LoopNode extends BaseNode {
       0,
       10,
       10,
-      'shape=rhombus',
+      'shape=rhombus;overflow=hidden;spacing=10',
     );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);
-    let geo = graph.getModel().getGeometry(this.vertex);
-    geo.x = 0;
-    geo.y = 0;
-    graph.getModel().setGeometry(this.vertex, geo);
+
+    let boundW = graph.view.getState(vertex).cellBounds.width;
+    let boundH = graph.view.getState(vertex).cellBounds.height;
+    let a = Math.round(Math.sqrt(boundW * boundH));
+    // vertex.geometry.width += 2 * a;
+    // vertex.geometry.height += 2 * a;
   }
 
   yes(nextNode: BaseNode) {

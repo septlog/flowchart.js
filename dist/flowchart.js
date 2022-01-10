@@ -92570,7 +92570,6 @@ var BaseNode = /** @class */ (function () {
     function BaseNode(token, chart) {
         this.visited = false;
         this.placed = false;
-        this.prev = [];
         this.condNodes = [];
         this.col = 1;
         /**
@@ -92687,10 +92686,16 @@ var ConditionNode = /** @class */ (function (_super) {
         _this.noVisited = false;
         _this.conds = 1;
         _this.endRow = 0;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, token.text, 0, 0, 0, 0, 'shape=rhombus');
+        var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, token.text, 0, 0, 0, 0, 'shape=rhombus;spacing=10');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_0__.graph.updateCellSize(vertex, true);
+        console.log(___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex));
+        var boundW = ___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex).cellBounds.width;
+        var boundH = ___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex).cellBounds.height;
+        var a = Math.round(Math.sqrt(boundW * boundH));
         return _this;
+        // vertex.geometry.width += 2 * a;
+        // vertex.geometry.height += 2 * a;
     }
     ConditionNode.prototype.yes = function (nextNode) {
         this.yesNode = nextNode;
@@ -92901,14 +92906,15 @@ var LoopNode = /** @class */ (function (_super) {
         _this.endRow = 0;
         _this.loops = 1;
         _this.rights = 1;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus');
+        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus;overflow=hidden;spacing=10');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
-        var geo = ___WEBPACK_IMPORTED_MODULE_1__.graph.getModel().getGeometry(_this.vertex);
-        geo.x = 0;
-        geo.y = 0;
-        ___WEBPACK_IMPORTED_MODULE_1__.graph.getModel().setGeometry(_this.vertex, geo);
+        var boundW = ___WEBPACK_IMPORTED_MODULE_1__.graph.view.getState(vertex).cellBounds.width;
+        var boundH = ___WEBPACK_IMPORTED_MODULE_1__.graph.view.getState(vertex).cellBounds.height;
+        var a = Math.round(Math.sqrt(boundW * boundH));
         return _this;
+        // vertex.geometry.width += 2 * a;
+        // vertex.geometry.height += 2 * a;
     }
     LoopNode.prototype.yes = function (nextNode) {
         this.yesNode = nextNode;
@@ -93630,7 +93636,6 @@ textarea.addEventListener('input', function (e) {
     graph.setDisconnectOnMove(false);
     // graph.cellsSelectable = true;
     // graph.autoSizeCells = true;
-    // mxgraph.mxText.textWidthPadding = 30;
     mxgraph.mxGraphHandler.guidesEnabled = true;
     mxgraph.mxEdgeHandler.snapToTerminals = true;
     new mxgraph.mxRubberband(graph);
@@ -93649,8 +93654,7 @@ textarea.addEventListener('input', function (e) {
     chart.drawSVG();
     graph.center();
     graph.center();
-    graph.center();
-    graph.center();
+    console.log(graph);
 });
 textarea.value = str;
 // let chart = parse(str);
