@@ -68,6 +68,7 @@ class LoopNode extends BaseNode {
     if (!this.noVisited) {
       this.noVisited = true;
       nextNode.loopNode = this.loopNode;
+      nextNode.condNode = this.condNode;
       if (!nextNode.placed) {
         nextNode.placed = true;
 
@@ -79,6 +80,10 @@ class LoopNode extends BaseNode {
           this.geometry.x +
           this.geometry.width / 2 -
           nextNode.geometry.width / 2;
+
+        if (this.condNode) {
+          this.condNode.conds++;
+        }
       }
     }
 

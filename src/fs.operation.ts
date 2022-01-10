@@ -29,6 +29,7 @@ class OperationNode extends BaseNode {
 
         nextNode.loopNode = this.loopNode;
         nextNode.condNode = this.condNode;
+        nextNode.condNodes = this.condNodes;
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
@@ -53,9 +54,13 @@ class OperationNode extends BaseNode {
         // if (nextNode.condNode === this.condNode) {
         //   console.log(true);
         // }
-        if (this.condNode) {
-          this.condNode.endRow = nextNode.row;
-        }
+
+        // for (let cd of this.condNodes) {
+        //   if (cd.col === nextNode.col) {
+        //     cd.endRow = nextNode.row;
+        //   }
+        // }
+        this.notOk = true;
       }
     }
   }

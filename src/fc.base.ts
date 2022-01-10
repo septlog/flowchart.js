@@ -15,6 +15,7 @@ class BaseNode {
   token: Token;
   loopNode: LoopNode;
   condNode: ConditionNode;
+  condNodes: ConditionNode[] = [];
   col: number = 1;
   /**
    * 层数
@@ -22,6 +23,8 @@ class BaseNode {
   row: number = 1;
 
   lineLength: number = 40;
+
+  notOk: boolean = false;
 
   get geometry() {
     return this.vertex.geometry;
@@ -78,8 +81,6 @@ class BaseNode {
       this.chart.cols = col;
     }
   }
-
-  addNode() {}
 }
 
 export default BaseNode;

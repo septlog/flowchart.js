@@ -34,11 +34,15 @@ class ConditionNode extends BaseNode {
 
     if (!this.yesVisited) {
       this.yesVisited = true;
-      nextNode.condNode = this;
-      nextNode.loopNode = this.loopNode;
+
       // 如果没有被放置
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.condNode = this;
+        nextNode.loopNode = this.loopNode;
+        // nextNode.condNodes = this.condNodes;
+        nextNode.condNodes = [...this.condNodes, this];
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
@@ -62,20 +66,21 @@ class ConditionNode extends BaseNode {
     }
   }
   no(nextNode: BaseNode) {
-    this.noNode = nextNode;
-    if (nextNode.row < this.row + 1) {
-      nextNode.row = this.row + 1;
-    }
-
     if (!this.noVisited) {
       this.noVisited = true;
-      this.updateCols();
+      this.noNode = nextNode;
 
+      if (nextNode.row < this.row + 1) {
+        nextNode.row = this.row + 1;
+      }
+      this.updateCols();
+      // this.updateConds2();
       if (!nextNode.placed) {
         nextNode.placed = true;
 
         nextNode.loopNode = this.loopNode;
         nextNode.condNode = this;
+        nextNode.condNodes = [...this.condNodes, this];
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col + this.conds;
@@ -174,6 +179,20 @@ class ConditionNode extends BaseNode {
         this.condNode.conds = this.conds + 1;
         this.condNode.updateCols();
       }
+    }
+  }
+
+  updateConds() {
+    this.conds++;
+    if (this.condNode) {
+      this.condNode.updateConds();
+    }
+  }
+
+  updateConds2() {
+    if (this.condNode) {
+      this.condNode.conds++;
+      this.condNode.updateConds();
     }
   }
 

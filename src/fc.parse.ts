@@ -43,7 +43,6 @@ export class Chart implements IChart {
   }
   drawSVG() {
     this.constructChart(this.start);
-    console.log(this.nodes);
 
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
@@ -76,7 +75,35 @@ export class Chart implements IChart {
         this.colMap.set(node.col, node.leftMost);
       }
     }
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
 
+      // if (node.token.text === '语句9') {
+      //   debugger;
+      // }
+      if (node.notOk) {
+        // node.nextNode
+        let idx = 0;
+        // for (let cd of node.condNodes) {
+        //   if (cd.col === node.nextNode.col) {
+        //     cd.endRow = node.nextNode.row;
+        //     idx = node.condNodes.indexOf(cd);
+        //     break;
+        //   }
+        // }
+        for (let i = 0; i < node.condNodes.length; i++) {
+          let cd = node.condNodes[i];
+          cd.endRow = node.nextNode.row;
+        }
+
+        // for (let i = 0; i < idx; i++) {
+        //   let cd = node.condNodes[i];
+        //   cd.endRow = node.nextNode.row;
+        // }
+      }
+    }
+
+    console.log(this.nodes);
     console.log(this);
 
     for (let i = 1; i <= this.rows; i++) {
@@ -99,14 +126,14 @@ export class Chart implements IChart {
       for (let node of nodes) {
         let leftNodes = this.findColNodes(node.col - 1);
 
-        // if (node.condNode) {
-        //   leftNodes = leftNodes.filter((leftNode) => {
-        //     return (
-        //       leftNode.row > node.condNode.row &&
-        //       leftNode.row < node.condNode.endRow
-        //     );
-        //   });
-        // }
+        if (node.condNodes.length > 0) {
+          leftNodes = leftNodes.filter((leftNode) => {
+            return (
+              leftNode.row > node.condNode.row &&
+              leftNode.row < node.condNode.endRow
+            );
+          });
+        }
         for (let leftNode of leftNodes) {
           if (this.intersectX(leftNode, node)) {
             node.setX(

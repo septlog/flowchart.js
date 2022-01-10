@@ -92571,12 +92571,14 @@ var BaseNode = /** @class */ (function () {
         this.visited = false;
         this.placed = false;
         this.prev = [];
+        this.condNodes = [];
         this.col = 1;
         /**
          * 层数
          */
         this.row = 1;
         this.lineLength = 40;
+        this.notOk = false;
         this.token = token;
         this.chart = chart;
     }
@@ -92631,7 +92633,6 @@ var BaseNode = /** @class */ (function () {
             this.chart.cols = col;
         }
     };
-    BaseNode.prototype.addNode = function () { };
     return BaseNode;
 }());
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (BaseNode);
@@ -92667,6 +92668,15 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 
 
 var ConditionNode = /** @class */ (function (_super) {
@@ -92686,11 +92696,13 @@ var ConditionNode = /** @class */ (function (_super) {
         this.yesNode = nextNode;
         if (!this.yesVisited) {
             this.yesVisited = true;
-            nextNode.condNode = this;
-            nextNode.loopNode = this.loopNode;
             // 如果没有被放置
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                nextNode.condNode = this;
+                nextNode.loopNode = this.loopNode;
+                // nextNode.condNodes = this.condNodes;
+                nextNode.condNodes = __spreadArray(__spreadArray([], this.condNodes, true), [this], false);
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col;
                 this.updateRow(nextNode.row);
@@ -92710,17 +92722,19 @@ var ConditionNode = /** @class */ (function (_super) {
         }
     };
     ConditionNode.prototype.no = function (nextNode) {
-        this.noNode = nextNode;
-        if (nextNode.row < this.row + 1) {
-            nextNode.row = this.row + 1;
-        }
         if (!this.noVisited) {
             this.noVisited = true;
+            this.noNode = nextNode;
+            if (nextNode.row < this.row + 1) {
+                nextNode.row = this.row + 1;
+            }
             this.updateCols();
+            // this.updateConds2();
             if (!nextNode.placed) {
                 nextNode.placed = true;
                 nextNode.loopNode = this.loopNode;
                 nextNode.condNode = this;
+                nextNode.condNodes = __spreadArray(__spreadArray([], this.condNodes, true), [this], false);
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col + this.conds;
                 this.updateRow(nextNode.row);
@@ -92786,6 +92800,18 @@ var ConditionNode = /** @class */ (function (_super) {
             }
         }
     };
+    ConditionNode.prototype.updateConds = function () {
+        this.conds++;
+        if (this.condNode) {
+            this.condNode.updateConds();
+        }
+    };
+    ConditionNode.prototype.updateConds2 = function () {
+        if (this.condNode) {
+            this.condNode.conds++;
+            this.condNode.updateConds();
+        }
+    };
     ConditionNode.prototype.updateEndRow = function () { };
     return ConditionNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_1__["default"]));
@@ -92805,8 +92831,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./src/index.ts");
-/* harmony import */ var _fc_base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./fc.base */ "./src/fc.base.ts");
+/* harmony import */ var _fs_operation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fs.operation */ "./src/fs.operation.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -92823,21 +92848,13 @@ var __extends = (undefined && undefined.__extends) || (function () {
     };
 })();
 
-
 var EndNode = /** @class */ (function (_super) {
     __extends(EndNode, _super);
-    function EndNode(token, chart) {
-        var _this = _super.call(this, token, chart) || this;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, '结束', 0, 0, 10, 10, 'fillColor=white;strokeColor=black');
-        _this.vertex = vertex;
-        console.log(vertex);
-        ___WEBPACK_IMPORTED_MODULE_0__.graph.updateCellSize(vertex, true);
-        var bottomMostCell = ___WEBPACK_IMPORTED_MODULE_0__.graph.intersects(___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(_this.vertex), _this.vertex.x, _this.vertex.y);
-        console.log(bottomMostCell);
-        return _this;
+    function EndNode() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     return EndNode;
-}(_fc_base__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_fs_operation__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EndNode);
 
 
@@ -92920,6 +92937,7 @@ var LoopNode = /** @class */ (function (_super) {
         if (!this.noVisited) {
             this.noVisited = true;
             nextNode.loopNode = this.loopNode;
+            nextNode.condNode = this.condNode;
             if (!nextNode.placed) {
                 nextNode.placed = true;
                 this.noNode.row = this.noNodeRow;
@@ -92928,6 +92946,9 @@ var LoopNode = /** @class */ (function (_super) {
                     this.geometry.x +
                         this.geometry.width / 2 -
                         nextNode.geometry.width / 2;
+                if (this.condNode) {
+                    this.condNode.conds++;
+                }
             }
         }
         this.updateRights();
@@ -92995,7 +93016,6 @@ var Chart = /** @class */ (function () {
     }
     Chart.prototype.drawSVG = function () {
         this.constructChart(this.start);
-        console.log(this.nodes);
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
@@ -93026,6 +93046,32 @@ var Chart = /** @class */ (function () {
                 this.colMap.set(node.col, node.leftMost);
             }
         }
+        for (var nodeName in this.nodes) {
+            var node = this.nodes[nodeName];
+            // if (node.token.text === '语句9') {
+            //   debugger;
+            // }
+            if (node.notOk) {
+                // node.nextNode
+                var idx = 0;
+                // for (let cd of node.condNodes) {
+                //   if (cd.col === node.nextNode.col) {
+                //     cd.endRow = node.nextNode.row;
+                //     idx = node.condNodes.indexOf(cd);
+                //     break;
+                //   }
+                // }
+                for (var i = 0; i < node.condNodes.length; i++) {
+                    var cd = node.condNodes[i];
+                    cd.endRow = node.nextNode.row;
+                }
+                // for (let i = 0; i < idx; i++) {
+                //   let cd = node.condNodes[i];
+                //   cd.endRow = node.nextNode.row;
+                // }
+            }
+        }
+        console.log(this.nodes);
         console.log(this);
         for (var i = 1; i <= this.rows; i++) {
             var nodes = this.findRowNodes(i);
@@ -93042,25 +93088,27 @@ var Chart = /** @class */ (function () {
         }
         for (var i = 1; i <= this.cols; i++) {
             var nodes = this.findColNodes(i);
-            for (var _b = 0, nodes_2 = nodes; _b < nodes_2.length; _b++) {
-                var node = nodes_2[_b];
-                var leftNodes = this.findColNodes(node.col - 1);
-                // if (node.condNode) {
-                //   leftNodes = leftNodes.filter((leftNode) => {
-                //     return (
-                //       leftNode.row > node.condNode.row &&
-                //       leftNode.row < node.condNode.endRow
-                //     );
-                //   });
-                // }
-                for (var _c = 0, leftNodes_1 = leftNodes; _c < leftNodes_1.length; _c++) {
-                    var leftNode = leftNodes_1[_c];
-                    if (this.intersectX(leftNode, node)) {
+            var _loop_1 = function (node) {
+                var leftNodes = this_1.findColNodes(node.col - 1);
+                if (node.condNodes.length > 0) {
+                    leftNodes = leftNodes.filter(function (leftNode) {
+                        return (leftNode.row > node.condNode.row &&
+                            leftNode.row < node.condNode.endRow);
+                    });
+                }
+                for (var _e = 0, leftNodes_1 = leftNodes; _e < leftNodes_1.length; _e++) {
+                    var leftNode = leftNodes_1[_e];
+                    if (this_1.intersectX(leftNode, node)) {
                         node.setX(leftNode.geometry.x + leftNode.geometry.width + node.lineLength);
                         if (node.condNode) {
                         }
                     }
                 }
+            };
+            var this_1 = this;
+            for (var _b = 0, nodes_2 = nodes; _b < nodes_2.length; _b++) {
+                var node = nodes_2[_b];
+                _loop_1(node);
             }
         }
         for (var nodeName in this.nodes) {
@@ -93070,8 +93118,8 @@ var Chart = /** @class */ (function () {
                 var w = 0;
                 for (var i = node.row; i <= node.endRow; i++) {
                     var childRowNodes = this.findRowNodes(i);
-                    for (var _d = 0, childRowNodes_1 = childRowNodes; _d < childRowNodes_1.length; _d++) {
-                        var childRowNode = childRowNodes_1[_d];
+                    for (var _c = 0, childRowNodes_1 = childRowNodes; _c < childRowNodes_1.length; _c++) {
+                        var childRowNode = childRowNodes_1[_c];
                         // if (childRowNode.col === node.width) {
                         if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
                             w = childRowNode.geometry.x + childRowNode.geometry.width;
@@ -93101,8 +93149,8 @@ var Chart = /** @class */ (function () {
                     var w = node.geometry.x;
                     for (var i = node.loopNode.row; i <= node.row; i++) {
                         var childRowNodes = this.findRowNodes(i);
-                        for (var _e = 0, childRowNodes_2 = childRowNodes; _e < childRowNodes_2.length; _e++) {
-                            var childRowNode = childRowNodes_2[_e];
+                        for (var _d = 0, childRowNodes_2 = childRowNodes; _d < childRowNodes_2.length; _d++) {
+                            var childRowNode = childRowNodes_2[_d];
                             if (childRowNode.col === node.col) {
                                 if (childRowNode.geometry.x < w) {
                                     w = childRowNode.geometry.x;
@@ -93360,8 +93408,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! . */ "./src/index.ts");
-/* harmony import */ var _fc_base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./fc.base */ "./src/fc.base.ts");
+/* harmony import */ var _fs_operation__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fs.operation */ "./src/fs.operation.ts");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -93378,62 +93425,13 @@ var __extends = (undefined && undefined.__extends) || (function () {
     };
 })();
 
-
 var StartNode = /** @class */ (function (_super) {
     __extends(StartNode, _super);
-    function StartNode(token, chart) {
-        var _this = _super.call(this, token, chart) || this;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, '开始', 0, 0, 10, 10);
-        _this.vertex = vertex;
-        ___WEBPACK_IMPORTED_MODULE_0__.graph.updateCellSize(vertex, true);
-        var geo = ___WEBPACK_IMPORTED_MODULE_0__.graph.getModel().getGeometry(_this.vertex);
-        geo.x = 0;
-        geo.y = 0;
-        ___WEBPACK_IMPORTED_MODULE_0__.graph.getModel().setGeometry(_this.vertex, geo);
-        return _this;
+    function StartNode() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    /**
-     * 设置下一个节点，并在 chart 中加入该节点
-     * @param next 下一个节点
-     * @returns next
-     */
-    StartNode.prototype.then = function (nextNode) {
-        this.nextNode = nextNode;
-        if (!this.visited) {
-            this.visited = true;
-            if (!nextNode.placed) {
-                nextNode.placed = true;
-                nextNode.row = this.row + 1;
-                nextNode.col = this.col;
-                this.updateRow(nextNode.row);
-                this.updateCol(nextNode.col);
-                nextNode.geometry.x =
-                    this.geometry.x +
-                        this.geometry.width / 2 -
-                        nextNode.geometry.width / 2;
-                nextNode.geometry.y =
-                    this.geometry.y + this.geometry.height + this.lineLength;
-            }
-        }
-    };
-    StartNode.prototype.drawLine = function () {
-        if (this.nextNode) {
-            if (this.nextNode.col === this.col) {
-                var edge = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_0__.parent, null, '', this.vertex, this.nextNode.vertex);
-            }
-            else {
-                var edge = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_0__.parent, null, '', this.vertex, this.nextNode.vertex);
-                edge.geometry.points = [
-                    new ___WEBPACK_IMPORTED_MODULE_0__.mxgraph.mxPoint(this.geometry.x + this.geometry.width / 2, this.geometry.y + this.geometry.height),
-                    new ___WEBPACK_IMPORTED_MODULE_0__.mxgraph.mxPoint(this.geometry.x + this.geometry.width / 2, this.nextNode.geometry.y - 20),
-                    new ___WEBPACK_IMPORTED_MODULE_0__.mxgraph.mxPoint(this.nextNode.geometry.x + this.nextNode.geometry.width / 2, this.nextNode.geometry.y - 20),
-                    new ___WEBPACK_IMPORTED_MODULE_0__.mxgraph.mxPoint(this.nextNode.geometry.x + this.nextNode.geometry.width / 2, this.nextNode.geometry.y),
-                ];
-            }
-        }
-    };
     return StartNode;
-}(_fc_base__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(_fs_operation__WEBPACK_IMPORTED_MODULE_0__["default"]));
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (StartNode);
 
 
@@ -93491,6 +93489,7 @@ var OperationNode = /** @class */ (function (_super) {
                 nextNode.placed = true;
                 nextNode.loopNode = this.loopNode;
                 nextNode.condNode = this.condNode;
+                nextNode.condNodes = this.condNodes;
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col;
                 this.updateRow(nextNode.row);
@@ -93513,9 +93512,12 @@ var OperationNode = /** @class */ (function (_super) {
                 // if (nextNode.condNode === this.condNode) {
                 //   console.log(true);
                 // }
-                if (this.condNode) {
-                    this.condNode.endRow = nextNode.row;
-                }
+                // for (let cd of this.condNodes) {
+                //   if (cd.col === nextNode.col) {
+                //     cd.endRow = nextNode.row;
+                //   }
+                // }
+                this.notOk = true;
             }
         }
     };
@@ -93660,6 +93662,7 @@ var b2 = document.getElementById('b2');
 var b3 = document.getElementById('b3');
 var b4 = document.getElementById('b4');
 var b5 = document.getElementById('b5');
+var b6 = document.getElementById('b6');
 b1.addEventListener('click', function () {
     textarea.value = "st=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
     textarea.dispatchEvent(new Event('input'));
@@ -93678,6 +93681,10 @@ b4.addEventListener('click', function () {
 });
 b5.addEventListener('click', function () {
     textarea.value = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b6.addEventListener('click', function () {
+    textarea.value = "cond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond5=>condition: \u6761\u4EF65\ncond6=>condition: \u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\ncond7=>condition: \u6761\u4EF67\ncond8=>condition: \u6761\u4EF68\ncond9=>condition: \u6761\u4EF69\n\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nop10=>operation: \u8BED\u53E510\nop11=>operation: \u8BED\u53E511\nop12=>operation: \u8BED\u53E512\nop13=>operation: \u8BED\u53E513\n\n\ncond1(yes)->op1\ncond1(no)->op11\ncond2(yes)->op2\ncond2(no)->cond9\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->cond5\ncond4(no)->op9\ncond5(yes)->op4\ncond5(no)->cond8\ncond6(yes)->op5\ncond6(no)->cond7\ncond7(yes)->op6\ncond7(no)->op7\ncond8(yes)->op8\ncond9(yes)->op10\n\nop1->cond2\nop2->cond3\nop3->op13\nop4->cond6\nop5->op12\nop6->op12\nop7->op12\nop8->op12\nop9->op13\nop10->op13\nop11->op13\nop12->op13\n";
     textarea.dispatchEvent(new Event('input'));
 });
 
