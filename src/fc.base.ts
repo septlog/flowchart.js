@@ -9,7 +9,6 @@ class BaseNode {
   vertex;
   visited: boolean = false;
   placed: boolean = false;
-  nextNode: BaseNode;
   edge;
   token: Token;
   loopNode: LoopNode;
@@ -24,6 +23,7 @@ class BaseNode {
   lineLength: number = 40;
 
   notOk: boolean = false;
+  w: number = 0;
 
   get geometry() {
     return this.vertex.geometry;
@@ -64,7 +64,11 @@ class BaseNode {
     this.geometry.x = num;
   }
 
-  setY(num: number) {}
+  setX2(num: number) {}
+
+  setY(num: number) {
+    this.geometry.y = num;
+  }
 
   drawLine() {}
 

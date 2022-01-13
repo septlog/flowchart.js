@@ -6,6 +6,7 @@ import { LoopNode } from './fc.loop';
 
 class OperationNode extends BaseNode {
   isBack: boolean;
+  nextNode: BaseNode;
   backNode: LoopNode;
   constructor(token: Token, chart: Chart) {
     super(token, chart);
@@ -28,6 +29,7 @@ class OperationNode extends BaseNode {
         nextNode.placed = true;
 
         nextNode.loopNode = this.loopNode;
+
         nextNode.condNode = this.condNode;
         nextNode.condNodes = this.condNodes;
 
@@ -46,20 +48,6 @@ class OperationNode extends BaseNode {
           this.vertex.geometry.height +
           this.lineLength;
       } else {
-        // if (nextNode.row < this.row + 1) {
-        //   nextNode.down(this.row - nextNode.row);
-        // }
-        // console.log(nextNode.condNode);
-        // console.log(this.condNode);
-        // if (nextNode.condNode === this.condNode) {
-        //   console.log(true);
-        // }
-
-        // for (let cd of this.condNodes) {
-        //   if (cd.col === nextNode.col) {
-        //     cd.endRow = nextNode.row;
-        //   }
-        // }
         this.notOk = true;
       }
     }
@@ -90,15 +78,6 @@ class OperationNode extends BaseNode {
         this.backNode.endRow = this.row;
         this.updateRow(this.backNode.noNodeRow);
       }
-    }
-  }
-
-  setY(num: number): void {
-    this.geometry.y = num;
-    if (this.nextNode) {
-      this.nextNode.setY(
-        this.geometry.y + this.geometry.height + this.lineLength,
-      );
     }
   }
 
@@ -140,6 +119,17 @@ class OperationNode extends BaseNode {
           ),
         ];
       }
+    }
+  }
+
+  setX2(num: number) {
+    this.geometry.x = num;
+    if (this.nextNode && this.nextNode.col === this.col) {
+      this.nextNode.setX2(
+        this.geometry.x +
+          this.geometry.width / 2 -
+          this.nextNode.geometry.width / 2,
+      );
     }
   }
 }

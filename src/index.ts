@@ -117,10 +117,25 @@ textarea.addEventListener('input', (e: any) => {
 
   let chart = parse(str);
 
+  graph.getModel().beginUpdate();
   chart.drawSVG();
-  graph.center();
-  graph.center();
-  console.log(graph);
+  graph.getModel().endUpdate();
+
+  let cw = graph.container.clientWidth;
+  let ch = graph.container.clientHeight;
+  let { x, y, width, height } = graph.view.graphBounds;
+
+  let dx = cw - width;
+  let dy = ch - height;
+
+  // if (x < 0) {
+  //   x--;
+  // }
+  // if (y < 0) {
+  //   y--;
+  // }
+  // graph.view.setTranslate(Math.ceil(-x), Math.ceil(-y));
+  graph.view.setTranslate(Math.floor(dx / 2 - x), Math.floor(dy / 2 - y));
 });
 
 textarea.value = str;
@@ -136,6 +151,7 @@ let b3 = document.getElementById('b3');
 let b4 = document.getElementById('b4');
 let b5 = document.getElementById('b5');
 let b6 = document.getElementById('b6');
+let b7 = document.getElementById('b7');
 
 b1.addEventListener('click', () => {
   textarea.value = `st=>start: 开始
@@ -423,4 +439,49 @@ op12->op13
 `;
   textarea.dispatchEvent(new Event('input'));
 });
+
+b7.addEventListener('click', () => {
+  textarea.value = `cond1=>condition: 1
+cond2=>condition: 2
+cond3=>condition: 3
+cond4=>condition: 4
+cond5=>condition: 5
+loop1=>loop: i<10
+loop2=>loop: j<10
+op1=>operation: a()
+op2=>operation: a()
+op3=>operation: a()
+op4=>operation: a()
+op5=>operation: a()
+op6=>operation: a()
+op7=>operation: j++
+op8=>operation: i++
+op9=>operation: end
+
+cond1(yes)->loop1
+cond1(no)->cond2
+cond2(yes)->op2
+cond2(no)->cond3
+cond3(yes)->op3
+cond3(no)->cond4
+cond4(yes)->op4
+cond4(no)->cond5
+cond5(yes)->op5
+cond5(no)->op6
+loop1(yes)->loop2
+loop1(no)->op9
+loop2(yes)->op1
+loop2(no)->op8
+op1->op7
+op2->op9
+op3->op9
+op4->op9
+op5->op9
+op6->op9
+op7->loop2
+op8->loop1
+`;
+  textarea.dispatchEvent(new Event('input'));
+});
+
 export { graph, parent };

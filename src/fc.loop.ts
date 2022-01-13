@@ -14,6 +14,8 @@ class LoopNode extends BaseNode {
 
   rights = 1;
 
+  rrrr: number = 0;
+
   constructor(token: Token, chart: Chart) {
     super(token, chart);
     let vertex = graph.insertVertex(
@@ -28,12 +30,6 @@ class LoopNode extends BaseNode {
     );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);
-
-    let boundW = graph.view.getState(vertex).cellBounds.width;
-    let boundH = graph.view.getState(vertex).cellBounds.height;
-    let a = Math.round(Math.sqrt(boundW * boundH));
-    // vertex.geometry.width += 2 * a;
-    // vertex.geometry.height += 2 * a;
   }
 
   yes(nextNode: BaseNode) {
@@ -97,6 +93,17 @@ class LoopNode extends BaseNode {
   drawLine(): void {
     if (this.yesNode) {
       graph.insertEdge(parent, null, '', this.vertex, this.yesNode.vertex);
+    }
+  }
+
+  down(num: number) {
+    this.row += num;
+    this.updateRow(this.row);
+    if (this.yesNode) {
+      this.yesNode.down(num);
+    }
+    if (this.noNode) {
+      this.noNode.down(num);
     }
   }
 

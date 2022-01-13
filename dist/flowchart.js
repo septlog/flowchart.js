@@ -92578,6 +92578,7 @@ var BaseNode = /** @class */ (function () {
         this.row = 1;
         this.lineLength = 40;
         this.notOk = false;
+        this.w = 0;
         this.token = token;
         this.chart = chart;
     }
@@ -92619,7 +92620,10 @@ var BaseNode = /** @class */ (function () {
     BaseNode.prototype.setX = function (num) {
         this.geometry.x = num;
     };
-    BaseNode.prototype.setY = function (num) { };
+    BaseNode.prototype.setX2 = function (num) { };
+    BaseNode.prototype.setY = function (num) {
+        this.geometry.y = num;
+    };
     BaseNode.prototype.drawLine = function () { };
     BaseNode.prototype.down = function (num) { };
     BaseNode.prototype.updateRow = function (row) {
@@ -92689,13 +92693,7 @@ var ConditionNode = /** @class */ (function (_super) {
         var vertex = ___WEBPACK_IMPORTED_MODULE_0__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_0__.parent, null, token.text, 0, 0, 0, 0, 'shape=rhombus;spacing=10');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_0__.graph.updateCellSize(vertex, true);
-        console.log(___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex));
-        var boundW = ___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex).cellBounds.width;
-        var boundH = ___WEBPACK_IMPORTED_MODULE_0__.graph.view.getState(vertex).cellBounds.height;
-        var a = Math.round(Math.sqrt(boundW * boundH));
         return _this;
-        // vertex.geometry.width += 2 * a;
-        // vertex.geometry.height += 2 * a;
     }
     ConditionNode.prototype.yes = function (nextNode) {
         this.yesNode = nextNode;
@@ -92734,7 +92732,6 @@ var ConditionNode = /** @class */ (function (_super) {
                 nextNode.row = this.row + 1;
             }
             this.updateCols();
-            // this.updateConds2();
             if (!nextNode.placed) {
                 nextNode.placed = true;
                 nextNode.loopNode = this.loopNode;
@@ -92747,12 +92744,10 @@ var ConditionNode = /** @class */ (function (_super) {
                 if (this.loopNode) {
                     this.loopNode.width++;
                 }
-                nextNode.vertex.geometry.x =
-                    this.vertex.geometry.x + this.vertex.geometry.width + this.lineLength;
-                nextNode.vertex.geometry.y =
-                    this.vertex.geometry.y +
-                        this.vertex.geometry.height +
-                        this.lineLength;
+                nextNode.geometry.x =
+                    this.geometry.x + this.geometry.width + this.lineLength;
+                nextNode.geometry.y =
+                    this.geometry.y + this.geometry.height + this.lineLength;
             }
             if (this.loopNode) {
                 nextNode.loopNode = this.loopNode;
@@ -92761,27 +92756,26 @@ var ConditionNode = /** @class */ (function (_super) {
             }
         }
     };
-    ConditionNode.prototype.down = function () {
-        this.yesNode.row = this.row + 1;
-    };
-    ConditionNode.prototype.setX = function (num) {
+    ConditionNode.prototype.setX2 = function (num) {
         this.geometry.x = num;
         if (this.yesNode) {
-            this.yesNode.setX(this.geometry.x +
+            this.yesNode.setX2(this.geometry.x +
                 this.geometry.width / 2 -
                 this.yesNode.geometry.width / 2);
         }
         if (this.noNode) {
-            this.noNode.setX(this.vertex.geometry.x + this.vertex.geometry.width + this.lineLength);
+            this.noNode.setX2(this.geometry.x + this.geometry.width + this.lineLength);
         }
     };
-    ConditionNode.prototype.setY = function (num) {
-        this.geometry.y = num;
+    ConditionNode.prototype.down = function (num) {
+        this.row += num;
+        // this.yesNode.row = this.row + 1;
+        this.updateRow(this.row);
         if (this.yesNode) {
-            this.yesNode.setY(this.geometry.y + this.geometry.height + this.lineLength);
+            this.yesNode.down(num);
         }
         if (this.noNode) {
-            this.noNode.setY(this.geometry.y + this.geometry.height + this.lineLength);
+            this.noNode.down(num);
         }
     };
     ConditionNode.prototype.drawLine = function () {
@@ -92808,12 +92802,6 @@ var ConditionNode = /** @class */ (function (_super) {
     ConditionNode.prototype.updateConds = function () {
         this.conds++;
         if (this.condNode) {
-            this.condNode.updateConds();
-        }
-    };
-    ConditionNode.prototype.updateConds2 = function () {
-        if (this.condNode) {
-            this.condNode.conds++;
             this.condNode.updateConds();
         }
     };
@@ -92906,15 +92894,11 @@ var LoopNode = /** @class */ (function (_super) {
         _this.endRow = 0;
         _this.loops = 1;
         _this.rights = 1;
+        _this.rrrr = 0;
         var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus;overflow=hidden;spacing=10');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
-        var boundW = ___WEBPACK_IMPORTED_MODULE_1__.graph.view.getState(vertex).cellBounds.width;
-        var boundH = ___WEBPACK_IMPORTED_MODULE_1__.graph.view.getState(vertex).cellBounds.height;
-        var a = Math.round(Math.sqrt(boundW * boundH));
         return _this;
-        // vertex.geometry.width += 2 * a;
-        // vertex.geometry.height += 2 * a;
     }
     LoopNode.prototype.yes = function (nextNode) {
         this.yesNode = nextNode;
@@ -92963,6 +92947,16 @@ var LoopNode = /** @class */ (function (_super) {
     LoopNode.prototype.drawLine = function () {
         if (this.yesNode) {
             ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, this.yesNode.vertex);
+        }
+    };
+    LoopNode.prototype.down = function (num) {
+        this.row += num;
+        this.updateRow(this.row);
+        if (this.yesNode) {
+            this.yesNode.down(num);
+        }
+        if (this.noNode) {
+            this.noNode.down(num);
         }
     };
     LoopNode.prototype.updateLoops = function () {
@@ -93022,61 +93016,9 @@ var Chart = /** @class */ (function () {
     }
     Chart.prototype.drawSVG = function () {
         this.constructChart(this.start);
-        for (var nodeName in this.nodes) {
-            var node = this.nodes[nodeName];
-            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
-                var nextNode = node.nextNode;
-                if (nextNode && nextNode.row < node.row + 1) {
-                    nextNode.down(node.row + 1 - nextNode.row);
-                }
-            }
-        }
-        for (var nodeName in this.nodes) {
-            var node = this.nodes[nodeName];
-            var h = this.rowMap.get(node.row);
-            if (h) {
-                if (node.geometry.height > h) {
-                    this.rowMap.set(node.row, node.geometry.height);
-                }
-            }
-            else {
-                this.rowMap.set(node.row, node.geometry.height);
-            }
-            var w = this.colMap.get(node.col);
-            if (w) {
-                if (node.leftMost < w) {
-                    this.colMap.set(node.col, node.leftMost);
-                }
-            }
-            else {
-                this.colMap.set(node.col, node.leftMost);
-            }
-        }
-        for (var nodeName in this.nodes) {
-            var node = this.nodes[nodeName];
-            // if (node.token.text === '语句9') {
-            //   debugger;
-            // }
-            if (node.notOk) {
-                // node.nextNode
-                var idx = 0;
-                // for (let cd of node.condNodes) {
-                //   if (cd.col === node.nextNode.col) {
-                //     cd.endRow = node.nextNode.row;
-                //     idx = node.condNodes.indexOf(cd);
-                //     break;
-                //   }
-                // }
-                for (var i = 0; i < node.condNodes.length; i++) {
-                    var cd = node.condNodes[i];
-                    cd.endRow = node.nextNode.row;
-                }
-                // for (let i = 0; i < idx; i++) {
-                //   let cd = node.condNodes[i];
-                //   cd.endRow = node.nextNode.row;
-                // }
-            }
-        }
+        this.re();
+        this.rePosition(this.start);
+        this.reEndRow(this.start);
         console.log(this.nodes);
         console.log(this);
         for (var i = 1; i <= this.rows; i++) {
@@ -93102,12 +93044,10 @@ var Chart = /** @class */ (function () {
                             leftNode.row < node.condNode.endRow);
                     });
                 }
-                for (var _e = 0, leftNodes_1 = leftNodes; _e < leftNodes_1.length; _e++) {
-                    var leftNode = leftNodes_1[_e];
+                for (var _d = 0, leftNodes_1 = leftNodes; _d < leftNodes_1.length; _d++) {
+                    var leftNode = leftNodes_1[_d];
                     if (this_1.intersectX(leftNode, node)) {
                         node.setX(leftNode.geometry.x + leftNode.geometry.width + node.lineLength);
-                        if (node.condNode) {
-                        }
                     }
                 }
             };
@@ -93117,46 +93057,21 @@ var Chart = /** @class */ (function () {
                 _loop_1(node);
             }
         }
+        this.re();
+        this.reLine2(this.start);
+        this.re();
+        this.reLine(this.start);
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
-            if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 node.drawLine();
-                var w = 0;
-                for (var i = node.row; i <= node.endRow; i++) {
-                    var childRowNodes = this.findRowNodes(i);
-                    for (var _c = 0, childRowNodes_1 = childRowNodes; _c < childRowNodes_1.length; _c++) {
-                        var childRowNode = childRowNodes_1[_c];
-                        // if (childRowNode.col === node.width) {
-                        if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
-                            w = childRowNode.geometry.x + childRowNode.geometry.width;
-                        }
-                        // }
-                    }
-                }
-                if (w + 20 * node.rights > node.geometry.x + node.geometry.width) {
-                    w += 20 * node.rights;
-                }
-                else {
-                    w = node.geometry.x + node.geometry.width + 20;
-                }
-                var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.noNode.vertex);
-                edge.geometry.points = [
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.geometry.x + node.geometry.width, node.geometry.y + node.geometry.height / 2),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y - 20),
-                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y),
-                ];
-            }
-            else if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
-                // node.drawLine();
                 if (node.backNode) {
-                    node.drawLine();
+                    // node.drawLine();
                     var w = node.geometry.x;
                     for (var i = node.loopNode.row; i <= node.row; i++) {
                         var childRowNodes = this.findRowNodes(i);
-                        for (var _d = 0, childRowNodes_2 = childRowNodes; _d < childRowNodes_2.length; _d++) {
-                            var childRowNode = childRowNodes_2[_d];
+                        for (var _c = 0, childRowNodes_1 = childRowNodes; _c < childRowNodes_1.length; _c++) {
+                            var childRowNode = childRowNodes_1[_c];
                             if (childRowNode.col === node.col) {
                                 if (childRowNode.geometry.x < w) {
                                     w = childRowNode.geometry.x;
@@ -93179,12 +93094,6 @@ var Chart = /** @class */ (function () {
                 else {
                     node.drawLine();
                 }
-            }
-            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
-                node.drawLine();
-            }
-            else {
-                node.drawLine();
             }
         }
     };
@@ -93236,6 +93145,232 @@ var Chart = /** @class */ (function () {
                 var noNode = this.getNode(token.no);
                 node.no(noNode);
                 this.constructChart(token.no);
+            }
+        }
+    };
+    // alignChart(token: Token) {
+    //   let node = this.getNode(token);
+    //   let nextNode = node.nextNode;
+    //   if (nextNode && nextNode.row < node.row + 1) {
+    //     nextNode.down(node.row + 1 - nextNode.row);
+    //   }
+    // }
+    Chart.prototype.re = function () {
+        for (var nodeName in this.nodes) {
+            var node = this.nodes[nodeName];
+            node.visited = false;
+        }
+    };
+    Chart.prototype.rePosition = function (token) {
+        var node = this.getNode(token);
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                var nextNode = node.nextNode;
+                if (nextNode && nextNode.row < node.row + 1) {
+                    nextNode.down(node.row + 1 - nextNode.row);
+                    // this.rows += node.row + 1 - nextNode.row;
+                }
+                if (token.next) {
+                    this.rePosition(token.next);
+                }
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                if (token.yes) {
+                    this.rePosition(token.yes);
+                }
+                if (token.no) {
+                    this.rePosition(token.no);
+                }
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                if (token.yes) {
+                    this.rePosition(token.yes);
+                }
+                if (token.no) {
+                    this.rePosition(token.no);
+                }
+            }
+        }
+    };
+    // reLine(token: Token) {
+    //   let node = this.getNode(token);
+    //   if (!node.visited) {
+    //     node.visited = true;
+    //     if (node instanceof OperationNode) {
+    //       node.drawLine();
+    //       let w = node.geometry.x + node.geometry.width;
+    //       if (token.next) {
+    //         let nextW = this.reLine(token.next);
+    //         if (nextW > w) {
+    //           w = nextW;
+    //         }
+    //       }
+    //       return w;
+    //     } else if (node instanceof LoopNode) {
+    //       node.drawLine();
+    //       let w = node.geometry.x + node.geometry.width;
+    //       if (token.yes) {
+    //         let yesW = this.reLine(token.yes);
+    //         console.log(yesW);
+    //         if (yesW > w) {
+    //           w = yesW;
+    //         }
+    //       }
+    //       w = w + 20;
+    //       let edge = graph.insertEdge(
+    //         parent,
+    //         null,
+    //         '',
+    //         node.vertex,
+    //         node.noNode.vertex,
+    //       );
+    //       edge.geometry.points = [
+    //         new mxgraph.mxPoint(
+    //           node.geometry.x + node.geometry.width,
+    //           node.geometry.y + node.geometry.height / 2,
+    //         ),
+    //         new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+    //         new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
+    //         new mxgraph.mxPoint(
+    //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
+    //           node.noNode.geometry.y - 20,
+    //         ),
+    //         new mxgraph.mxPoint(
+    //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
+    //           node.noNode.geometry.y,
+    //         ),
+    //       ];
+    //       if (token.no) {
+    //         let noW = this.reLine(token.no);
+    //         if (noW > w) {
+    //           w = noW;
+    //         }
+    //       }
+    //       return w;
+    //     } else if (node instanceof ConditionNode) {
+    //       node.drawLine();
+    //       let w = node.geometry.x + node.geometry.width;
+    //       let yesW = 0;
+    //       if (token.yes) {
+    //         yesW = this.reLine(token.yes);
+    //         if (yesW > w) {
+    //           w = yesW;
+    //         }
+    //       }
+    //       if (token.no) {
+    //         let noW = this.reLine(token.no);
+    //         if (w < yesW) {
+    //           node.noNode.setX(yesW + 20);
+    //         }
+    //         if (noW > w) {
+    //           w = noW;
+    //           // node.noNode.setX(w);
+    //         }
+    //       }
+    //       return w;
+    //     }
+    //   }
+    // }
+    Chart.prototype.reLine = function (token) {
+        var node = this.getNode(token);
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                node.drawLine();
+                if (token.next) {
+                    this.reLine(token.next);
+                }
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                node.drawLine();
+                var w = node.w;
+                var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.noNode.vertex);
+                edge.geometry.points = [
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.geometry.x + node.geometry.width, node.geometry.y + node.geometry.height / 2),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y - 20),
+                    new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.noNode.geometry.x + node.noNode.geometry.width / 2, node.noNode.geometry.y),
+                ];
+                if (token.yes) {
+                    this.reLine(token.yes);
+                }
+                if (token.no) {
+                    this.reLine(token.no);
+                }
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                node.drawLine();
+                if (token.yes) {
+                    this.reLine(token.yes);
+                }
+                if (token.no) {
+                    this.reLine(token.no);
+                }
+            }
+        }
+    };
+    Chart.prototype.reLine2 = function (token) {
+        var node = this.getNode(token);
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                var w = node.geometry.x + node.geometry.width;
+                if (token.next) {
+                    var nextW = this.reLine2(token.next);
+                    if (nextW > w) {
+                        w = nextW;
+                    }
+                }
+                node.w = w;
+                return w;
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                var w = node.geometry.x + node.geometry.width;
+                if (token.yes) {
+                    var yesW = this.reLine2(token.yes) + 20;
+                    if (yesW > w) {
+                        w = yesW;
+                    }
+                }
+                if (token.no) {
+                    var noW = this.reLine2(token.no) + 20;
+                    if (noW > w) {
+                        w = noW;
+                    }
+                }
+                node.w = w;
+                return w;
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                var w = node.geometry.x + node.geometry.width;
+                if (token.yes) {
+                    var yesW = this.reLine2(token.yes) + 20;
+                    if (yesW > w) {
+                        w = yesW;
+                    }
+                }
+                if (token.no) {
+                    node.noNode.setX2(w + 40);
+                    var noW = this.reLine2(token.no);
+                    if (noW > w) {
+                        w = noW;
+                    }
+                }
+                node.w = w;
+                return w;
+            }
+        }
+    };
+    Chart.prototype.reEndRow = function (token) {
+        for (var nodeName in this.nodes) {
+            var node = this.nodes[nodeName];
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"] && node.notOk) {
+                for (var i = 0; i < node.condNodes.length; i++) {
+                    var cd = node.condNodes[i];
+                    cd.endRow = node.nextNode.row;
+                }
             }
         }
     };
@@ -93292,12 +93427,14 @@ var Chart = /** @class */ (function () {
         return nodes;
     };
     Chart.prototype.intersectX = function (leftNode, rightNode) {
-        if (rightNode.geometry.x <= leftNode.geometry.x + leftNode.geometry.width) {
+        if (rightNode.geometry.x <=
+            leftNode.geometry.x + leftNode.geometry.width + leftNode.lineLength) {
             return true;
         }
     };
     Chart.prototype.intersectY = function (topNode, bottomNode) {
-        if (bottomNode.geometry.y < topNode.geometry.y + topNode.geometry.height) {
+        if (bottomNode.geometry.y <
+            topNode.geometry.y + topNode.geometry.height + topNode.lineLength) {
             return true;
         }
     };
@@ -93510,19 +93647,6 @@ var OperationNode = /** @class */ (function (_super) {
                         this.lineLength;
             }
             else {
-                // if (nextNode.row < this.row + 1) {
-                //   nextNode.down(this.row - nextNode.row);
-                // }
-                // console.log(nextNode.condNode);
-                // console.log(this.condNode);
-                // if (nextNode.condNode === this.condNode) {
-                //   console.log(true);
-                // }
-                // for (let cd of this.condNodes) {
-                //   if (cd.col === nextNode.col) {
-                //     cd.endRow = nextNode.row;
-                //   }
-                // }
                 this.notOk = true;
             }
         }
@@ -93551,12 +93675,6 @@ var OperationNode = /** @class */ (function (_super) {
             }
         }
     };
-    OperationNode.prototype.setY = function (num) {
-        this.geometry.y = num;
-        if (this.nextNode) {
-            this.nextNode.setY(this.geometry.y + this.geometry.height + this.lineLength);
-        }
-    };
     OperationNode.prototype.drawLine = function () {
         if (this.nextNode) {
             if (this.nextNode.col === this.col) {
@@ -93571,6 +93689,14 @@ var OperationNode = /** @class */ (function (_super) {
                     new ___WEBPACK_IMPORTED_MODULE_1__.mxgraph.mxPoint(this.nextNode.geometry.x + this.nextNode.geometry.width / 2, this.nextNode.geometry.y),
                 ];
             }
+        }
+    };
+    OperationNode.prototype.setX2 = function (num) {
+        this.geometry.x = num;
+        if (this.nextNode && this.nextNode.col === this.col) {
+            this.nextNode.setX2(this.geometry.x +
+                this.geometry.width / 2 -
+                this.nextNode.geometry.width / 2);
         }
     };
     return OperationNode;
@@ -93651,10 +93777,22 @@ textarea.addEventListener('input', function (e) {
     style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
     parent = graph.getDefaultParent();
     var chart = (0,_fc_parse__WEBPACK_IMPORTED_MODULE_0__.parse)(str);
+    graph.getModel().beginUpdate();
     chart.drawSVG();
-    graph.center();
-    graph.center();
-    console.log(graph);
+    graph.getModel().endUpdate();
+    var cw = graph.container.clientWidth;
+    var ch = graph.container.clientHeight;
+    var _a = graph.view.graphBounds, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
+    var dx = cw - width;
+    var dy = ch - height;
+    // if (x < 0) {
+    //   x--;
+    // }
+    // if (y < 0) {
+    //   y--;
+    // }
+    // graph.view.setTranslate(Math.ceil(-x), Math.ceil(-y));
+    graph.view.setTranslate(Math.floor(dx / 2 - x), Math.floor(dy / 2 - y));
 });
 textarea.value = str;
 // let chart = parse(str);
@@ -93667,6 +93805,7 @@ var b3 = document.getElementById('b3');
 var b4 = document.getElementById('b4');
 var b5 = document.getElementById('b5');
 var b6 = document.getElementById('b6');
+var b7 = document.getElementById('b7');
 b1.addEventListener('click', function () {
     textarea.value = "st=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
     textarea.dispatchEvent(new Event('input'));
@@ -93689,6 +93828,10 @@ b5.addEventListener('click', function () {
 });
 b6.addEventListener('click', function () {
     textarea.value = "cond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond5=>condition: \u6761\u4EF65\ncond6=>condition: \u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\ncond7=>condition: \u6761\u4EF67\ncond8=>condition: \u6761\u4EF68\ncond9=>condition: \u6761\u4EF69\n\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nop10=>operation: \u8BED\u53E510\nop11=>operation: \u8BED\u53E511\nop12=>operation: \u8BED\u53E512\nop13=>operation: \u8BED\u53E513\n\n\ncond1(yes)->op1\ncond1(no)->op11\ncond2(yes)->op2\ncond2(no)->cond9\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->cond5\ncond4(no)->op9\ncond5(yes)->op4\ncond5(no)->cond8\ncond6(yes)->op5\ncond6(no)->cond7\ncond7(yes)->op6\ncond7(no)->op7\ncond8(yes)->op8\ncond9(yes)->op10\n\nop1->cond2\nop2->cond3\nop3->op13\nop4->cond6\nop5->op12\nop6->op12\nop7->op12\nop8->op12\nop9->op13\nop10->op13\nop11->op13\nop12->op13\n";
+    textarea.dispatchEvent(new Event('input'));
+});
+b7.addEventListener('click', function () {
+    textarea.value = "cond1=>condition: 1\ncond2=>condition: 2\ncond3=>condition: 3\ncond4=>condition: 4\ncond5=>condition: 5\nloop1=>loop: i<10\nloop2=>loop: j<10\nop1=>operation: a()\nop2=>operation: a()\nop3=>operation: a()\nop4=>operation: a()\nop5=>operation: a()\nop6=>operation: a()\nop7=>operation: j++\nop8=>operation: i++\nop9=>operation: end\n\ncond1(yes)->loop1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->cond3\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->op4\ncond4(no)->cond5\ncond5(yes)->op5\ncond5(no)->op6\nloop1(yes)->loop2\nloop1(no)->op9\nloop2(yes)->op1\nloop2(no)->op8\nop1->op7\nop2->op9\nop3->op9\nop4->op9\nop5->op9\nop6->op9\nop7->loop2\nop8->loop1\n";
     textarea.dispatchEvent(new Event('input'));
 });
 

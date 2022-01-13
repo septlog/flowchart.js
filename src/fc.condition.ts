@@ -27,12 +27,6 @@ class ConditionNode extends BaseNode {
     );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);
-    console.log(graph.view.getState(vertex));
-    let boundW = graph.view.getState(vertex).cellBounds.width;
-    let boundH = graph.view.getState(vertex).cellBounds.height;
-    let a = Math.round(Math.sqrt(boundW * boundH));
-    // vertex.geometry.width += 2 * a;
-    // vertex.geometry.height += 2 * a;
   }
 
   yes(nextNode: BaseNode) {
@@ -47,6 +41,7 @@ class ConditionNode extends BaseNode {
 
         nextNode.condNode = this;
         nextNode.loopNode = this.loopNode;
+
         // nextNode.condNodes = this.condNodes;
         nextNode.condNodes = [...this.condNodes, this];
 
@@ -80,7 +75,6 @@ class ConditionNode extends BaseNode {
         nextNode.row = this.row + 1;
       }
       this.updateCols();
-      // this.updateConds2();
       if (!nextNode.placed) {
         nextNode.placed = true;
 
@@ -98,12 +92,10 @@ class ConditionNode extends BaseNode {
           this.loopNode.width++;
         }
 
-        nextNode.vertex.geometry.x =
-          this.vertex.geometry.x + this.vertex.geometry.width + this.lineLength;
-        nextNode.vertex.geometry.y =
-          this.vertex.geometry.y +
-          this.vertex.geometry.height +
-          this.lineLength;
+        nextNode.geometry.x =
+          this.geometry.x + this.geometry.width + this.lineLength;
+        nextNode.geometry.y =
+          this.geometry.y + this.geometry.height + this.lineLength;
       }
 
       if (this.loopNode) {
@@ -114,37 +106,31 @@ class ConditionNode extends BaseNode {
     }
   }
 
-  down() {
-    this.yesNode.row = this.row + 1;
-  }
-
-  setX(num: number) {
+  setX2(num: number) {
     this.geometry.x = num;
     if (this.yesNode) {
-      this.yesNode.setX(
+      this.yesNode.setX2(
         this.geometry.x +
           this.geometry.width / 2 -
           this.yesNode.geometry.width / 2,
       );
     }
     if (this.noNode) {
-      this.noNode.setX(
-        this.vertex.geometry.x + this.vertex.geometry.width + this.lineLength,
+      this.noNode.setX2(
+        this.geometry.x + this.geometry.width + this.lineLength,
       );
     }
   }
 
-  setY(num: number) {
-    this.geometry.y = num;
+  down(num: number) {
+    this.row += num;
+    // this.yesNode.row = this.row + 1;
+    this.updateRow(this.row);
     if (this.yesNode) {
-      this.yesNode.setY(
-        this.geometry.y + this.geometry.height + this.lineLength,
-      );
+      this.yesNode.down(num);
     }
     if (this.noNode) {
-      this.noNode.setY(
-        this.geometry.y + this.geometry.height + this.lineLength,
-      );
+      this.noNode.down(num);
     }
   }
 
@@ -191,13 +177,6 @@ class ConditionNode extends BaseNode {
   updateConds() {
     this.conds++;
     if (this.condNode) {
-      this.condNode.updateConds();
-    }
-  }
-
-  updateConds2() {
-    if (this.condNode) {
-      this.condNode.conds++;
       this.condNode.updateConds();
     }
   }

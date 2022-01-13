@@ -44,64 +44,9 @@ export class Chart implements IChart {
   drawSVG() {
     this.constructChart(this.start);
 
-    for (let nodeName in this.nodes) {
-      let node = this.nodes[nodeName];
-      if (node instanceof OperationNode) {
-        let nextNode = node.nextNode;
-        if (nextNode && nextNode.row < node.row + 1) {
-          nextNode.down(node.row + 1 - nextNode.row);
-        }
-      }
-    }
-
-    for (let nodeName in this.nodes) {
-      let node = this.nodes[nodeName];
-
-      let h = this.rowMap.get(node.row);
-      if (h) {
-        if (node.geometry.height > h) {
-          this.rowMap.set(node.row, node.geometry.height);
-        }
-      } else {
-        this.rowMap.set(node.row, node.geometry.height);
-      }
-
-      let w = this.colMap.get(node.col);
-      if (w) {
-        if (node.leftMost < w) {
-          this.colMap.set(node.col, node.leftMost);
-        }
-      } else {
-        this.colMap.set(node.col, node.leftMost);
-      }
-    }
-    for (let nodeName in this.nodes) {
-      let node = this.nodes[nodeName];
-
-      // if (node.token.text === '语句9') {
-      //   debugger;
-      // }
-      if (node.notOk) {
-        // node.nextNode
-        let idx = 0;
-        // for (let cd of node.condNodes) {
-        //   if (cd.col === node.nextNode.col) {
-        //     cd.endRow = node.nextNode.row;
-        //     idx = node.condNodes.indexOf(cd);
-        //     break;
-        //   }
-        // }
-        for (let i = 0; i < node.condNodes.length; i++) {
-          let cd = node.condNodes[i];
-          cd.endRow = node.nextNode.row;
-        }
-
-        // for (let i = 0; i < idx; i++) {
-        //   let cd = node.condNodes[i];
-        //   cd.endRow = node.nextNode.row;
-        // }
-      }
-    }
+    this.re();
+    this.rePosition(this.start);
+    this.reEndRow(this.start);
 
     console.log(this.nodes);
     console.log(this);
@@ -139,67 +84,23 @@ export class Chart implements IChart {
             node.setX(
               leftNode.geometry.x + leftNode.geometry.width + node.lineLength,
             );
-
-            if (node.condNode) {
-            }
           }
         }
       }
     }
 
+    this.re();
+    this.reLine2(this.start);
+    this.re();
+    this.reLine(this.start);
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
 
-      if (node instanceof LoopNode) {
+      if (node instanceof OperationNode) {
         node.drawLine();
-        let w = 0;
-
-        for (let i = node.row; i <= node.endRow; i++) {
-          let childRowNodes = this.findRowNodes(i);
-          for (let childRowNode of childRowNodes) {
-            // if (childRowNode.col === node.width) {
-            if (childRowNode.geometry.x + childRowNode.geometry.width > w) {
-              w = childRowNode.geometry.x + childRowNode.geometry.width;
-            }
-            // }
-          }
-        }
-
-        if (w + 20 * node.rights > node.geometry.x + node.geometry.width) {
-          w += 20 * node.rights;
-        } else {
-          w = node.geometry.x + node.geometry.width + 20;
-        }
-
-        let edge = graph.insertEdge(
-          parent,
-          null,
-          '',
-          node.vertex,
-          node.noNode.vertex,
-        );
-
-        edge.geometry.points = [
-          new mxgraph.mxPoint(
-            node.geometry.x + node.geometry.width,
-            node.geometry.y + node.geometry.height / 2,
-          ),
-          new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
-          new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
-          new mxgraph.mxPoint(
-            node.noNode.geometry.x + node.noNode.geometry.width / 2,
-            node.noNode.geometry.y - 20,
-          ),
-          new mxgraph.mxPoint(
-            node.noNode.geometry.x + node.noNode.geometry.width / 2,
-            node.noNode.geometry.y,
-          ),
-        ];
-      } else if (node instanceof OperationNode) {
-        // node.drawLine();
 
         if (node.backNode) {
-          node.drawLine();
+          // node.drawLine();
           let w = node.geometry.x;
 
           for (let i = node.loopNode.row; i <= node.row; i++) {
@@ -250,10 +151,6 @@ export class Chart implements IChart {
         } else {
           node.drawLine();
         }
-      } else if (node instanceof ConditionNode) {
-        node.drawLine();
-      } else {
-        node.drawLine();
       }
     }
   }
@@ -305,6 +202,262 @@ export class Chart implements IChart {
       }
     }
   }
+
+  // alignChart(token: Token) {
+  //   let node = this.getNode(token);
+  //   let nextNode = node.nextNode;
+  //   if (nextNode && nextNode.row < node.row + 1) {
+  //     nextNode.down(node.row + 1 - nextNode.row);
+  //   }
+  // }
+  re() {
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      node.visited = false;
+    }
+  }
+
+  rePosition(token: Token) {
+    let node = this.getNode(token);
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        let nextNode = node.nextNode;
+        if (nextNode && nextNode.row < node.row + 1) {
+          nextNode.down(node.row + 1 - nextNode.row);
+          // this.rows += node.row + 1 - nextNode.row;
+        }
+        if (token.next) {
+          this.rePosition(token.next);
+        }
+      } else if (node instanceof LoopNode) {
+        if (token.yes) {
+          this.rePosition(token.yes);
+        }
+        if (token.no) {
+          this.rePosition(token.no);
+        }
+      } else if (node instanceof ConditionNode) {
+        if (token.yes) {
+          this.rePosition(token.yes);
+        }
+        if (token.no) {
+          this.rePosition(token.no);
+        }
+      }
+    }
+  }
+
+  // reLine(token: Token) {
+  //   let node = this.getNode(token);
+  //   if (!node.visited) {
+  //     node.visited = true;
+  //     if (node instanceof OperationNode) {
+  //       node.drawLine();
+
+  //       let w = node.geometry.x + node.geometry.width;
+  //       if (token.next) {
+  //         let nextW = this.reLine(token.next);
+  //         if (nextW > w) {
+  //           w = nextW;
+  //         }
+  //       }
+  //       return w;
+  //     } else if (node instanceof LoopNode) {
+  //       node.drawLine();
+  //       let w = node.geometry.x + node.geometry.width;
+  //       if (token.yes) {
+  //         let yesW = this.reLine(token.yes);
+  //         console.log(yesW);
+  //         if (yesW > w) {
+  //           w = yesW;
+  //         }
+  //       }
+
+  //       w = w + 20;
+  //       let edge = graph.insertEdge(
+  //         parent,
+  //         null,
+  //         '',
+  //         node.vertex,
+  //         node.noNode.vertex,
+  //       );
+
+  //       edge.geometry.points = [
+  //         new mxgraph.mxPoint(
+  //           node.geometry.x + node.geometry.width,
+  //           node.geometry.y + node.geometry.height / 2,
+  //         ),
+  //         new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+  //         new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
+  //         new mxgraph.mxPoint(
+  //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
+  //           node.noNode.geometry.y - 20,
+  //         ),
+  //         new mxgraph.mxPoint(
+  //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
+  //           node.noNode.geometry.y,
+  //         ),
+  //       ];
+  //       if (token.no) {
+  //         let noW = this.reLine(token.no);
+  //         if (noW > w) {
+  //           w = noW;
+  //         }
+  //       }
+  //       return w;
+  //     } else if (node instanceof ConditionNode) {
+  //       node.drawLine();
+  //       let w = node.geometry.x + node.geometry.width;
+  //       let yesW = 0;
+  //       if (token.yes) {
+  //         yesW = this.reLine(token.yes);
+  //         if (yesW > w) {
+  //           w = yesW;
+  //         }
+  //       }
+
+  //       if (token.no) {
+  //         let noW = this.reLine(token.no);
+
+  //         if (w < yesW) {
+  //           node.noNode.setX(yesW + 20);
+  //         }
+  //         if (noW > w) {
+  //           w = noW;
+  //           // node.noNode.setX(w);
+  //         }
+  //       }
+  //       return w;
+  //     }
+  //   }
+  // }
+
+  reLine(token: Token) {
+    let node = this.getNode(token);
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        node.drawLine();
+
+        if (token.next) {
+          this.reLine(token.next);
+        }
+      } else if (node instanceof LoopNode) {
+        node.drawLine();
+        let w = node.w;
+        let edge = graph.insertEdge(
+          parent,
+          null,
+          '',
+          node.vertex,
+          node.noNode.vertex,
+        );
+
+        edge.geometry.points = [
+          new mxgraph.mxPoint(
+            node.geometry.x + node.geometry.width,
+            node.geometry.y + node.geometry.height / 2,
+          ),
+          new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
+          new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
+          new mxgraph.mxPoint(
+            node.noNode.geometry.x + node.noNode.geometry.width / 2,
+            node.noNode.geometry.y - 20,
+          ),
+          new mxgraph.mxPoint(
+            node.noNode.geometry.x + node.noNode.geometry.width / 2,
+            node.noNode.geometry.y,
+          ),
+        ];
+
+        if (token.yes) {
+          this.reLine(token.yes);
+        }
+        if (token.no) {
+          this.reLine(token.no);
+        }
+      } else if (node instanceof ConditionNode) {
+        node.drawLine();
+
+        if (token.yes) {
+          this.reLine(token.yes);
+        }
+
+        if (token.no) {
+          this.reLine(token.no);
+        }
+      }
+    }
+  }
+
+  reLine2(token: Token) {
+    let node = this.getNode(token);
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        let w = node.geometry.x + node.geometry.width;
+        if (token.next) {
+          let nextW = this.reLine2(token.next);
+          if (nextW > w) {
+            w = nextW;
+          }
+        }
+        node.w = w;
+        return w;
+      } else if (node instanceof LoopNode) {
+        let w = node.geometry.x + node.geometry.width;
+        if (token.yes) {
+          let yesW = this.reLine2(token.yes) + 20;
+          if (yesW > w) {
+            w = yesW;
+          }
+        }
+
+        if (token.no) {
+          let noW = this.reLine2(token.no) + 20;
+          if (noW > w) {
+            w = noW;
+          }
+        }
+        node.w = w;
+        return w;
+      } else if (node instanceof ConditionNode) {
+        let w = node.geometry.x + node.geometry.width;
+        if (token.yes) {
+          let yesW = this.reLine2(token.yes) + 20;
+          if (yesW > w) {
+            w = yesW;
+          }
+        }
+
+        if (token.no) {
+          node.noNode.setX2(w + 40);
+          let noW = this.reLine2(token.no);
+
+          if (noW > w) {
+            w = noW;
+          }
+        }
+        node.w = w;
+        return w;
+      }
+    }
+  }
+
+  reEndRow(token: Token) {
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+
+      if (node instanceof OperationNode && node.notOk) {
+        for (let i = 0; i < node.condNodes.length; i++) {
+          let cd = node.condNodes[i];
+          cd.endRow = node.nextNode.row;
+        }
+      }
+    }
+  }
+
   getNode(token: Token): BaseNode {
     if (this.nodes[token.name]) {
       return this.nodes[token.name];
@@ -367,12 +520,18 @@ export class Chart implements IChart {
   }
 
   intersectX(leftNode: BaseNode, rightNode: BaseNode) {
-    if (rightNode.geometry.x <= leftNode.geometry.x + leftNode.geometry.width) {
+    if (
+      rightNode.geometry.x <=
+      leftNode.geometry.x + leftNode.geometry.width + leftNode.lineLength
+    ) {
       return true;
     }
   }
   intersectY(topNode: BaseNode, bottomNode: BaseNode) {
-    if (bottomNode.geometry.y < topNode.geometry.y + topNode.geometry.height) {
+    if (
+      bottomNode.geometry.y <
+      topNode.geometry.y + topNode.geometry.height + topNode.lineLength
+    ) {
       return true;
     }
   }
