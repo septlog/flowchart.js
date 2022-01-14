@@ -92579,6 +92579,7 @@ var BaseNode = /** @class */ (function () {
         this.lineLength = 40;
         this.notOk = false;
         this.w = 0;
+        this.l = 0;
         this.token = token;
         this.chart = chart;
     }
@@ -92738,7 +92739,7 @@ var ConditionNode = /** @class */ (function (_super) {
                 nextNode.condNode = this;
                 nextNode.condNodes = __spreadArray(__spreadArray([], this.condNodes, true), [this], false);
                 nextNode.row = this.row + 1;
-                nextNode.col = this.col + this.conds;
+                nextNode.col = this.col + 1;
                 this.updateRow(nextNode.row);
                 this.updateCol(nextNode.col);
                 if (this.loopNode) {
@@ -92931,6 +92932,7 @@ var LoopNode = /** @class */ (function (_super) {
             if (!nextNode.placed) {
                 nextNode.placed = true;
                 this.noNode.row = this.noNodeRow;
+                this.noNode.col = this.col;
                 this.updateRow(this.noNode.row);
                 nextNode.geometry.x =
                     this.geometry.x +
@@ -92939,6 +92941,11 @@ var LoopNode = /** @class */ (function (_super) {
                 if (this.condNode) {
                     this.condNode.conds++;
                 }
+            }
+            else {
+                this.noNode.row = this.noNodeRow;
+                this.updateRow(this.noNode.row);
+                this.notOk = true;
             }
         }
         this.updateRights();
@@ -92969,6 +92976,21 @@ var LoopNode = /** @class */ (function (_super) {
         if (this.loopNode) {
             this.loopNode.rights++;
             this.loopNode.updateRights();
+        }
+    };
+    LoopNode.prototype.setX2 = function (num) {
+        this.geometry.x = num;
+        if (this.yesNode) {
+            this.yesNode.setX2(this.geometry.x +
+                this.geometry.width / 2 -
+                this.yesNode.geometry.width / 2);
+        }
+        if (this.noNode) {
+            if (this.noNode.col === this.col) {
+                this.noNode.setX2(this.geometry.x +
+                    this.geometry.width / 2 -
+                    this.noNode.geometry.width / 2);
+            }
         }
     };
     return LoopNode;
@@ -93044,8 +93066,8 @@ var Chart = /** @class */ (function () {
                             leftNode.row < node.condNode.endRow);
                     });
                 }
-                for (var _d = 0, leftNodes_1 = leftNodes; _d < leftNodes_1.length; _d++) {
-                    var leftNode = leftNodes_1[_d];
+                for (var _c = 0, leftNodes_1 = leftNodes; _c < leftNodes_1.length; _c++) {
+                    var leftNode = leftNodes_1[_c];
                     if (this_1.intersectX(leftNode, node)) {
                         node.setX(leftNode.geometry.x + leftNode.geometry.width + node.lineLength);
                     }
@@ -93058,44 +93080,11 @@ var Chart = /** @class */ (function () {
             }
         }
         this.re();
-        this.reLine2(this.start);
+        this.loopRight(this.start);
+        this.re();
+        this.loopLeft(this.start);
         this.re();
         this.reLine(this.start);
-        for (var nodeName in this.nodes) {
-            var node = this.nodes[nodeName];
-            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
-                node.drawLine();
-                if (node.backNode) {
-                    // node.drawLine();
-                    var w = node.geometry.x;
-                    for (var i = node.loopNode.row; i <= node.row; i++) {
-                        var childRowNodes = this.findRowNodes(i);
-                        for (var _c = 0, childRowNodes_1 = childRowNodes; _c < childRowNodes_1.length; _c++) {
-                            var childRowNode = childRowNodes_1[_c];
-                            if (childRowNode.col === node.col) {
-                                if (childRowNode.geometry.x < w) {
-                                    w = childRowNode.geometry.x;
-                                }
-                            }
-                        }
-                    }
-                    var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.backNode.vertex);
-                    edge.geometry.points = [
-                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.leftMost, node.geometry.y + node.geometry.height / 2),
-                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w - 20 * node.backNode.loops, node.geometry.y + node.geometry.height / 2),
-                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(w - 20 * node.backNode.loops, edge.target.geometry.y + 20),
-                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y - 20),
-                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y),
-                    ];
-                    if (node.backNode.loopNode) {
-                        node.backNode.loopNode.updateLoops();
-                    }
-                }
-                else {
-                    node.drawLine();
-                }
-            }
-        }
     };
     Chart.prototype.constructChart = function (token) {
         var node = this.getNode(token);
@@ -93171,6 +93160,12 @@ var Chart = /** @class */ (function () {
                     nextNode.down(node.row + 1 - nextNode.row);
                     // this.rows += node.row + 1 - nextNode.row;
                 }
+                var backNode = node.backNode;
+                if (backNode &&
+                    backNode.noNodeRow !== 0 &&
+                    backNode.noNodeRow < node.row + 1) {
+                    backNode.noNode.down(node.row + 1 - backNode.noNodeRow);
+                }
                 if (token.next) {
                     this.rePosition(token.next);
                 }
@@ -93193,91 +93188,23 @@ var Chart = /** @class */ (function () {
             }
         }
     };
-    // reLine(token: Token) {
-    //   let node = this.getNode(token);
-    //   if (!node.visited) {
-    //     node.visited = true;
-    //     if (node instanceof OperationNode) {
-    //       node.drawLine();
-    //       let w = node.geometry.x + node.geometry.width;
-    //       if (token.next) {
-    //         let nextW = this.reLine(token.next);
-    //         if (nextW > w) {
-    //           w = nextW;
-    //         }
-    //       }
-    //       return w;
-    //     } else if (node instanceof LoopNode) {
-    //       node.drawLine();
-    //       let w = node.geometry.x + node.geometry.width;
-    //       if (token.yes) {
-    //         let yesW = this.reLine(token.yes);
-    //         console.log(yesW);
-    //         if (yesW > w) {
-    //           w = yesW;
-    //         }
-    //       }
-    //       w = w + 20;
-    //       let edge = graph.insertEdge(
-    //         parent,
-    //         null,
-    //         '',
-    //         node.vertex,
-    //         node.noNode.vertex,
-    //       );
-    //       edge.geometry.points = [
-    //         new mxgraph.mxPoint(
-    //           node.geometry.x + node.geometry.width,
-    //           node.geometry.y + node.geometry.height / 2,
-    //         ),
-    //         new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
-    //         new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
-    //         new mxgraph.mxPoint(
-    //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
-    //           node.noNode.geometry.y - 20,
-    //         ),
-    //         new mxgraph.mxPoint(
-    //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
-    //           node.noNode.geometry.y,
-    //         ),
-    //       ];
-    //       if (token.no) {
-    //         let noW = this.reLine(token.no);
-    //         if (noW > w) {
-    //           w = noW;
-    //         }
-    //       }
-    //       return w;
-    //     } else if (node instanceof ConditionNode) {
-    //       node.drawLine();
-    //       let w = node.geometry.x + node.geometry.width;
-    //       let yesW = 0;
-    //       if (token.yes) {
-    //         yesW = this.reLine(token.yes);
-    //         if (yesW > w) {
-    //           w = yesW;
-    //         }
-    //       }
-    //       if (token.no) {
-    //         let noW = this.reLine(token.no);
-    //         if (w < yesW) {
-    //           node.noNode.setX(yesW + 20);
-    //         }
-    //         if (noW > w) {
-    //           w = noW;
-    //           // node.noNode.setX(w);
-    //         }
-    //       }
-    //       return w;
-    //     }
-    //   }
-    // }
     Chart.prototype.reLine = function (token) {
         var node = this.getNode(token);
         if (!node.visited) {
             node.visited = true;
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 node.drawLine();
+                if (node.backNode) {
+                    var edge = ___WEBPACK_IMPORTED_MODULE_5__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_5__.parent, null, '', node.vertex, node.backNode.vertex);
+                    var l = node.backNode.l;
+                    edge.geometry.points = [
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(node.leftMost, node.geometry.y + node.geometry.height / 2),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(l, node.geometry.y + node.geometry.height / 2),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(l, edge.target.geometry.y + 20),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y - 20),
+                        new ___WEBPACK_IMPORTED_MODULE_5__.mxgraph.mxPoint(edge.target.geometry.x + edge.target.geometry.width / 2, edge.target.geometry.y),
+                    ];
+                }
                 if (token.next) {
                     this.reLine(token.next);
                 }
@@ -93311,55 +93238,126 @@ var Chart = /** @class */ (function () {
             }
         }
     };
-    Chart.prototype.reLine2 = function (token) {
+    Chart.prototype.loopRight = function (token) {
         var node = this.getNode(token);
         if (!node.visited) {
             node.visited = true;
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var w = node.geometry.x + node.geometry.width;
                 if (token.next) {
-                    var nextW = this.reLine2(token.next);
+                    var nextW = this.loopRight(token.next);
                     if (nextW > w) {
                         w = nextW;
                     }
                 }
                 node.w = w;
+                // this.colMap.set(node.col, w);
                 return w;
             }
             else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
                 var w = node.geometry.x + node.geometry.width;
                 if (token.yes) {
-                    var yesW = this.reLine2(token.yes) + 20;
+                    var yesW = this.loopRight(token.yes);
                     if (yesW > w) {
                         w = yesW;
                     }
                 }
-                if (token.no) {
-                    var noW = this.reLine2(token.no) + 20;
-                    if (noW > w) {
-                        w = noW;
-                    }
-                }
+                w += 20;
                 node.w = w;
+                // this.colMap.set(node.col, w);
                 return w;
             }
             else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
                 var w = node.geometry.x + node.geometry.width;
                 if (token.yes) {
-                    var yesW = this.reLine2(token.yes) + 20;
+                    var yesW = this.loopRight(token.yes);
                     if (yesW > w) {
                         w = yesW;
                     }
                 }
                 if (token.no) {
                     node.noNode.setX2(w + 40);
-                    var noW = this.reLine2(token.no);
+                    var noW = this.loopRight(token.no);
                     if (noW > w) {
                         w = noW;
                     }
                 }
                 node.w = w;
+                // this.colMap.set(node.col, w);
                 return w;
+            }
+        }
+    };
+    Chart.prototype.loopLeft = function (token) {
+        var node = this.getNode(token);
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                var l = node.geometry.x;
+                if (token.next) {
+                    var nextL = this.loopLeft(token.next);
+                    if (nextL < l) {
+                        l = nextL;
+                    }
+                }
+                node.l = l;
+                // let leftNode = this.findNode(node.col - 1, node.row);
+                // if (leftNode && l < leftNode.w) {
+                //   let diff = l - leftNode.w + 20;
+                //   console.log(node.token.text);
+                //   node.setX2(node.geometry.x + diff);
+                //   l += diff;
+                //   node.l = l;
+                //   node.w = node.w + leftNode.w - l + 20;
+                // }
+                return l;
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                var l = node.geometry.x;
+                if (token.yes) {
+                    var yesL = this.loopLeft(token.yes);
+                    if (yesL < l) {
+                        l = yesL;
+                    }
+                }
+                if (token.no) {
+                    this.loopLeft(token.no);
+                }
+                l -= 20;
+                node.l = l;
+                // let leftNode = this.findNode(node.col - 1, node.row);
+                // if (leftNode && l < leftNode.w) {
+                //   let diff = l - leftNode.w + 20;
+                //   console.log(node.token.text);
+                //   node.setX2(node.geometry.x + diff);
+                //   l += diff;
+                //   node.l = l;
+                //   node.w = node.w + leftNode.w - l + 20;
+                // }
+                return l;
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                var l = node.geometry.x;
+                if (token.yes) {
+                    var yesL = this.loopLeft(token.yes);
+                    if (yesL < l) {
+                        l = yesL;
+                    }
+                }
+                if (token.no) {
+                    this.loopLeft(token.no);
+                }
+                node.l = l;
+                // let leftNode = this.findNode(node.col - 1, node.row);
+                // if (leftNode && l < leftNode.w) {
+                //   let diff = leftNode.w - l + 20;
+                //   console.log(node.token.text);
+                //   node.setX2(node.geometry.x + diff);
+                //   l += diff;
+                //   node.l = l;
+                //   node.w += diff;
+                // }
+                return l;
             }
         }
     };
@@ -93398,6 +93396,12 @@ var Chart = /** @class */ (function () {
         return this.nodes[token.name];
     };
     Chart.prototype.findNode = function (x, y) {
+        if (x < 1) {
+            return undefined;
+        }
+        if (y < 1) {
+            return undefined;
+        }
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
             // console.log(nodeName, node.row, node.col);
@@ -93720,6 +93724,37 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "parent": () => (/* binding */ parent)
 /* harmony export */ });
 /* harmony import */ var _fc_parse__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fc.parse */ "./src/fc.parse.ts");
+/* harmony import */ var _test_ll_txt__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./test/ll.txt */ "./src/test/ll.txt");
+/* harmony import */ var _test_ll2_txt__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./test/ll2.txt */ "./src/test/ll2.txt");
+/* harmony import */ var _test_clcccc_txt__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./test/clcccc.txt */ "./src/test/clcccc.txt");
+/* harmony import */ var _test_clclccc_txt__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./test/clclccc.txt */ "./src/test/clclccc.txt");
+/* harmony import */ var _test_clclclcc_txt__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./test/clclclcc.txt */ "./src/test/clclclcc.txt");
+/* harmony import */ var _test_cccceccc_txt__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./test/cccceccc.txt */ "./src/test/cccceccc.txt");
+/* harmony import */ var _test_cccceccc2_txt__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./test/cccceccc2.txt */ "./src/test/cccceccc2.txt");
+/* harmony import */ var _test_cccecc_txt__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./test/cccecc.txt */ "./src/test/cccecc.txt");
+/* harmony import */ var _test_lcc_txt__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./test/lcc.txt */ "./src/test/lcc.txt");
+/* harmony import */ var _test_llllcc_txt__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./test/llllcc.txt */ "./src/test/llllcc.txt");
+/* harmony import */ var _test_llllcc2_txt__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./test/llllcc2.txt */ "./src/test/llllcc2.txt");
+/* harmony import */ var _test_llll_txt__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/llll.txt */ "./src/test/llll.txt");
+/* harmony import */ var _test_llll2_txt__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./test/llll2.txt */ "./src/test/llll2.txt");
+
+//两层循环
+
+
+// if loop else if else if ...
+
+//if loop else if loop else if ...
+
+
+//多层if嵌套
+
+
+
+
+
+
+//四层循环
+
 
 var mxgraph = __webpack_require__(/*! mxgraph */ "./node_modules/mxgraph/javascript/dist/build.js")({
     mxBasePath: './src',
@@ -93750,7 +93785,7 @@ style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 var parent = graph.getDefaultParent();
-var str = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n\n";
+var str = _test_clclccc_txt__WEBPACK_IMPORTED_MODULE_4__;
 var textarea = document.querySelector('textarea');
 textarea.addEventListener('input', function (e) {
     div.replaceChildren();
@@ -93760,8 +93795,6 @@ textarea.addEventListener('input', function (e) {
     graph.gridEnabled = true;
     graph.setAllowDanglingEdges(false);
     graph.setDisconnectOnMove(false);
-    // graph.cellsSelectable = true;
-    // graph.autoSizeCells = true;
     mxgraph.mxGraphHandler.guidesEnabled = true;
     mxgraph.mxEdgeHandler.snapToTerminals = true;
     new mxgraph.mxRubberband(graph);
@@ -93785,19 +93818,9 @@ textarea.addEventListener('input', function (e) {
     var _a = graph.view.graphBounds, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
     var dx = cw - width;
     var dy = ch - height;
-    // if (x < 0) {
-    //   x--;
-    // }
-    // if (y < 0) {
-    //   y--;
-    // }
-    // graph.view.setTranslate(Math.ceil(-x), Math.ceil(-y));
     graph.view.setTranslate(Math.floor(dx / 2 - x), Math.floor(dy / 2 - y));
 });
 textarea.value = str;
-// let chart = parse(str);
-// chart.drawSVG();
-// graph.center();
 textarea.dispatchEvent(new Event('input'));
 var b1 = document.getElementById('b1');
 var b2 = document.getElementById('b2');
@@ -93806,36 +93829,209 @@ var b4 = document.getElementById('b4');
 var b5 = document.getElementById('b5');
 var b6 = document.getElementById('b6');
 var b7 = document.getElementById('b7');
-b1.addEventListener('click', function () {
-    textarea.value = "st=>start: \u5F00\u59CB\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\nop1=>operation: \u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1\n";
-    textarea.dispatchEvent(new Event('input'));
-});
-b2.addEventListener('click', function () {
-    textarea.value = "op1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond1(yes)->op1\ncond1(no)->op6\nop1->cond2\ncond2(yes)->op2\ncond2(no)->cond4\ncond4(yes)->op5\nop2->cond3\ncond3(yes)->op3\ncond3(no)->op4\nop3->op7\nop4->op7\nop5->op7\nop6->op7\n";
-    textarea.dispatchEvent(new Event('input'));
-});
+var b8 = document.getElementById('b8');
+var b9 = document.getElementById('b9');
+var b10 = document.getElementById('b10');
+var b11 = document.getElementById('b11');
+var b12 = document.getElementById('b12');
+var b13 = document.getElementById('b13');
 b3.addEventListener('click', function () {
-    textarea.value = "loop1=>loop: i<10\nop1=>operation: \u8BED\u53E51\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: \u8BED\u53E52\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4\n";
+    textarea.value = _test_ll_txt__WEBPACK_IMPORTED_MODULE_1__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b10.addEventListener('click', function () {
+    textarea.value = _test_ll2_txt__WEBPACK_IMPORTED_MODULE_2__;
     textarea.dispatchEvent(new Event('input'));
 });
 b4.addEventListener('click', function () {
-    textarea.value = "cond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond5=>condition: \u6761\u4EF65\ncond6=>condition: \u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\ncond7=>condition: \u6761\u4EF67\ncond8=>condition: \u6761\u4EF68\ncond9=>condition: \u6761\u4EF69\n\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nop10=>operation: \u8BED\u53E510\nop11=>operation: \u8BED\u53E511\nop12=>operation: \u8BED\u53E512\nop13=>operation: \u8BED\u53E513\n\n\ncond1(yes)->op1\ncond1(no)->op11\ncond2(yes)->op2\ncond2(no)->cond9\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->cond5\ncond4(no)->op9\ncond5(yes)->op4\ncond5(no)->cond8\ncond6(yes)->op5\ncond6(no)->cond7\ncond7(yes)->op6\ncond7(no)->op7\ncond8(yes)->op8\ncond9(yes)->op10\n\nop1->cond2\nop2->cond3\nop3->op13\nop4->cond6\nop5->op12\nop6->op12\nop7->op12\nop8->op12\nop9->op13\nop10->op13\nop11->op13\nop12->op13\n";
+    textarea.value = _test_llll_txt__WEBPACK_IMPORTED_MODULE_12__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b11.addEventListener('click', function () {
+    textarea.value = _test_lcc_txt__WEBPACK_IMPORTED_MODULE_9__;
     textarea.dispatchEvent(new Event('input'));
 });
 b5.addEventListener('click', function () {
-    textarea.value = "loop1=>loop: i<10\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop9=>operation: ??\nop5=>operation: k++\nop6=>operation: j++\nop7=>operation: i++\nop8=>operation: h++\nop10=>operation: \u8BED\u53E55\nop11=>operation: \u8BED\u53E56\nop12=>operation: \u8BED\u53E57\ncond1=>condition: \u6761\u4EF6A\ncond2=>condition: \u6761\u4EF6B\nloop4(yes)->loop1\nloop4(no)->op9\nloop1(yes)->op1\nloop1(no)->op4\nloop2(yes)->op2\nloop2(no)->op7\nloop3(yes)->op3\nloop3(no)->op6\nop1->loop2\nop2->loop3\nop3->cond1\ncond1(yes)->op10\n\ncond1(no)->cond2\n\ncond2(yes)->op11\n\ncond2(no)->op12\nop12->op5\n\n\n\nop10->op5\n\nop11->op5\nop5->loop3\nop6->loop2\nop7->loop1\nop4->op8\nop8->loop4\n";
+    textarea.value = _test_llllcc_txt__WEBPACK_IMPORTED_MODULE_10__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b12.addEventListener('click', function () {
+    textarea.value = _test_llllcc2_txt__WEBPACK_IMPORTED_MODULE_11__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b1.addEventListener('click', function () {
+    textarea.value = _test_cccecc_txt__WEBPACK_IMPORTED_MODULE_8__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b2.addEventListener('click', function () {
+    textarea.value = _test_cccceccc2_txt__WEBPACK_IMPORTED_MODULE_7__;
     textarea.dispatchEvent(new Event('input'));
 });
 b6.addEventListener('click', function () {
-    textarea.value = "cond1=>condition: \u6761\u4EF61\ncond2=>condition: \u6761\u4EF62\ncond3=>condition: \u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\u6761\u4EF63\ncond4=>condition: \u6761\u4EF64\ncond5=>condition: \u6761\u4EF65\ncond6=>condition: \u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\n\u6761\u4EF66\ncond7=>condition: \u6761\u4EF67\ncond8=>condition: \u6761\u4EF68\ncond9=>condition: \u6761\u4EF69\n\nop1=>operation: \u8BED\u53E51\nop2=>operation: \u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\n\u8BED\u53E52\nop3=>operation: \u8BED\u53E53\nop4=>operation: \u8BED\u53E54\nop5=>operation: \u8BED\u53E55\nop6=>operation: \u8BED\u53E56\nop7=>operation: \u8BED\u53E57\nop8=>operation: \u8BED\u53E58\nop9=>operation: \u8BED\u53E59\nop10=>operation: \u8BED\u53E510\nop11=>operation: \u8BED\u53E511\nop12=>operation: \u8BED\u53E512\nop13=>operation: \u8BED\u53E513\n\n\ncond1(yes)->op1\ncond1(no)->op11\ncond2(yes)->op2\ncond2(no)->cond9\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->cond5\ncond4(no)->op9\ncond5(yes)->op4\ncond5(no)->cond8\ncond6(yes)->op5\ncond6(no)->cond7\ncond7(yes)->op6\ncond7(no)->op7\ncond8(yes)->op8\ncond9(yes)->op10\n\nop1->cond2\nop2->cond3\nop3->op13\nop4->cond6\nop5->op12\nop6->op12\nop7->op12\nop8->op12\nop9->op13\nop10->op13\nop11->op13\nop12->op13\n";
+    textarea.value = _test_cccceccc_txt__WEBPACK_IMPORTED_MODULE_6__;
     textarea.dispatchEvent(new Event('input'));
 });
 b7.addEventListener('click', function () {
-    textarea.value = "cond1=>condition: 1\ncond2=>condition: 2\ncond3=>condition: 3\ncond4=>condition: 4\ncond5=>condition: 5\nloop1=>loop: i<10\nloop2=>loop: j<10\nop1=>operation: a()\nop2=>operation: a()\nop3=>operation: a()\nop4=>operation: a()\nop5=>operation: a()\nop6=>operation: a()\nop7=>operation: j++\nop8=>operation: i++\nop9=>operation: end\n\ncond1(yes)->loop1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->cond3\ncond3(yes)->op3\ncond3(no)->cond4\ncond4(yes)->op4\ncond4(no)->cond5\ncond5(yes)->op5\ncond5(no)->op6\nloop1(yes)->loop2\nloop1(no)->op9\nloop2(yes)->op1\nloop2(no)->op8\nop1->op7\nop2->op9\nop3->op9\nop4->op9\nop5->op9\nop6->op9\nop7->loop2\nop8->loop1\n";
+    textarea.value = _test_clcccc_txt__WEBPACK_IMPORTED_MODULE_3__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b8.addEventListener('click', function () {
+    textarea.value = _test_clclccc_txt__WEBPACK_IMPORTED_MODULE_4__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b13.addEventListener('click', function () {
+    textarea.value = _test_clclclcc_txt__WEBPACK_IMPORTED_MODULE_5__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b9.addEventListener('click', function () {
+    textarea.value = _test_llll2_txt__WEBPACK_IMPORTED_MODULE_13__;
     textarea.dispatchEvent(new Event('input'));
 });
 
 
+
+/***/ }),
+
+/***/ "./src/test/cccceccc.txt":
+/*!*******************************!*\
+  !*** ./src/test/cccceccc.txt ***!
+  \*******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 条件1\r\ncond2=>condition: 条件2\r\ncond3=>condition: 条件3条件3条件3条件3条件3条件3条件3条件3条件3条件3条件3条件3条件3\r\ncond4=>condition: 条件4\r\ncond5=>condition: 条件5\r\ncond6=>condition: 条件6\r\n条件6\r\n条件6\r\n条件6\r\n条件6\r\n条件6\r\n条件6\r\n条件6\r\ncond7=>condition: 条件7\r\ncond8=>condition: 条件8\r\ncond9=>condition: 条件9\r\n\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\n语句2\r\n语句2\r\n语句2\r\n语句2\r\n语句2\r\n语句2\r\n语句2\r\n语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop5=>operation: 语句5\r\nop6=>operation: 语句6\r\nop7=>operation: 语句7\r\nop8=>operation: 语句8\r\nop9=>operation: 语句9\r\nop10=>operation: 语句10\r\nop11=>operation: 语句11\r\nop12=>operation: 语句12\r\nop13=>operation: 语句13\r\n\r\n\r\ncond1(yes)->op1\r\ncond1(no)->op11\r\ncond2(yes)->op2\r\ncond2(no)->cond9\r\ncond3(yes)->op3\r\ncond3(no)->cond4\r\ncond4(yes)->cond5\r\ncond4(no)->op9\r\ncond5(yes)->op4\r\ncond5(no)->cond8\r\ncond6(yes)->op5\r\ncond6(no)->cond7\r\ncond7(yes)->op6\r\ncond7(no)->op7\r\ncond8(yes)->op8\r\ncond9(yes)->op10\r\n\r\nop1->cond2\r\nop2->cond3\r\nop3->op13\r\nop4->cond6\r\nop5->op12\r\nop6->op12\r\nop7->op12\r\nop8->op12\r\nop9->op13\r\nop10->op13\r\nop11->op13\r\nop12->op13\r\n";
+
+/***/ }),
+
+/***/ "./src/test/cccceccc2.txt":
+/*!********************************!*\
+  !*** ./src/test/cccceccc2.txt ***!
+  \********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 条件1\r\ncond2=>condition: 条件2\r\ncond3=>condition: 条件3\r\ncond4=>condition: 条件4\r\ncond5=>condition: 条件5\r\ncond6=>condition: 条件6\r\ncond7=>condition: 条件7\r\ncond8=>condition: 条件8\r\ncond9=>condition: 条件9\r\n\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop5=>operation: 语句5\r\nop6=>operation: 语句6\r\nop7=>operation: 语句7\r\nop8=>operation: 语句8\r\nop9=>operation: 语句9\r\nop10=>operation: 语句10\r\nop11=>operation: 语句11\r\nop12=>operation: 语句12\r\nop13=>operation: 语句13\r\n\r\n\r\ncond1(yes)->op1\r\ncond1(no)->op11\r\ncond2(yes)->op2\r\ncond2(no)->cond9\r\ncond3(yes)->op3\r\ncond3(no)->cond4\r\ncond4(yes)->cond5\r\ncond4(no)->op9\r\ncond5(yes)->op4\r\ncond5(no)->cond8\r\ncond6(yes)->op5\r\ncond6(no)->cond7\r\ncond7(yes)->op6\r\ncond7(no)->op7\r\ncond8(yes)->op8\r\ncond9(yes)->op10\r\n\r\nop1->cond2\r\nop2->cond3\r\nop3->op13\r\nop4->cond6\r\nop5->op12\r\nop6->op12\r\nop7->op12\r\nop8->op12\r\nop9->op13\r\nop10->op13\r\nop11->op13\r\nop12->op13\r\n";
+
+/***/ }),
+
+/***/ "./src/test/cccecc.txt":
+/*!*****************************!*\
+  !*** ./src/test/cccecc.txt ***!
+  \*****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "op1=>operation: 语句1\nop2=>operation: 语句2\nop3=>operation: 语句3\nop4=>operation: 语句4\nop5=>operation: 语句5\nop6=>operation: 语句6\nop7=>operation: 语句7\ncond1=>condition: 条件1\ncond2=>condition: 条件2\ncond3=>condition: 条件3\ncond4=>condition: 条件4\ncond1(yes)->op1\ncond1(no)->op6\nop1->cond2\ncond2(yes)->op2\ncond2(no)->cond4\ncond4(yes)->op5\nop2->cond3\ncond3(yes)->op3\ncond3(no)->op4\nop3->op7\nop4->op7\nop5->op7\nop6->op7";
+
+/***/ }),
+
+/***/ "./src/test/clcccc.txt":
+/*!*****************************!*\
+  !*** ./src/test/clcccc.txt ***!
+  \*****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 1\r\ncond2=>condition: 2\r\ncond3=>condition: 3\r\ncond4=>condition: 4\r\ncond5=>condition: 5\r\nloop1=>loop: i<10\r\nloop2=>loop: j<10\r\nop1=>operation: a()\r\nop2=>operation: a()\r\nop3=>operation: a()\r\nop4=>operation: a()\r\nop5=>operation: a()\r\nop6=>operation: a()\r\nop7=>operation: j++\r\nop8=>operation: i++\r\nop9=>operation: end\r\n\r\ncond1(yes)->loop1\r\ncond1(no)->cond2\r\ncond2(yes)->op2\r\ncond2(no)->cond3\r\ncond3(yes)->op3\r\ncond3(no)->cond4\r\ncond4(yes)->op4\r\ncond4(no)->cond5\r\ncond5(yes)->op5\r\ncond5(no)->op6\r\nloop1(yes)->loop2\r\nloop1(no)->op9\r\nloop2(yes)->op1\r\nloop2(no)->op8\r\nop1->op7\r\nop2->op9\r\nop3->op9\r\nop4->op9\r\nop5->op9\r\nop6->op9\r\nop7->loop2\r\nop8->loop1\r\n";
+
+/***/ }),
+
+/***/ "./src/test/clclccc.txt":
+/*!******************************!*\
+  !*** ./src/test/clclccc.txt ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 1\r\ncond2=>condition: 2\r\ncond3=>condition: 3\r\ncond4=>condition: 4\r\ncond5=>condition: 5\r\nloop1=>loop: i<10\r\nloop2=>loop: j<10\r\nloop3=>loop: i<10\r\nloop4=>loop: j<10\r\nop1=>operation: a()\r\nop2=>operation: a()\r\nop3=>operation: a()\r\nop4=>operation: a()\r\nop5=>operation: a()\r\nop6=>operation: a()\r\nop7=>operation: j++\r\nop8=>operation: i++\r\nop9=>operation: end\r\n\r\nop10=>operation: j++\r\nop11=>operation: i++\r\n\r\n\r\ncond1(yes)->loop1\r\ncond1(no)->cond2\r\ncond2(yes)->loop3\r\ncond2(no)->cond3\r\ncond3(yes)->op3\r\ncond3(no)->cond4\r\ncond4(yes)->op4\r\ncond4(no)->cond5\r\ncond5(yes)->op5\r\ncond5(no)->op6\r\nloop1(yes)->loop2\r\nloop1(no)->op9\r\nloop2(yes)->op1\r\nloop2(no)->op8\r\nloop3(yes)->loop4\r\nloop3(no)->op9\r\nloop4(yes)->op2\r\nloop4(no)->op11\r\nop2->op10\r\nop10->loop4\r\nop11->loop3\r\n\r\n\r\n\r\nop1->op7\r\n\r\nop3->op9\r\nop4->op9\r\nop5->op9\r\nop6->op9\r\nop7->loop2\r\nop8->loop1\r\n";
+
+/***/ }),
+
+/***/ "./src/test/clclclcc.txt":
+/*!*******************************!*\
+  !*** ./src/test/clclclcc.txt ***!
+  \*******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 1\r\ncond2=>condition: 2\r\ncond3=>condition: 3\r\ncond4=>condition: 4\r\ncond5=>condition: 5\r\nloop1=>loop: i<10\r\nloop2=>loop: j<10\r\nloop3=>loop: i<10\r\nloop4=>loop: j<10\r\nop1=>operation: a()\r\nop2=>operation: a()\r\nop3=>operation: a()\r\nop4=>operation: a()\r\nop5=>operation: a()\r\nop6=>operation: a()\r\nop7=>operation: j++\r\nop8=>operation: i++\r\nop9=>operation: end\r\n\r\nop10=>operation: j++\r\nop11=>operation: i++\r\n\r\nop12=>operation: j++\r\nop13=>operation: i++\r\nloop5=>loop: i<10\r\nloop6=>loop: j<10\r\n\r\n\r\ncond1(yes)->loop1\r\ncond1(no)->cond2\r\ncond2(yes)->loop3\r\ncond2(no)->cond3\r\ncond3(yes)->loop5\r\nloop5(yes)->loop6\r\nloop5(no)->op9\r\nloop6(yes)->op3\r\nloop6(no)->op13\r\nop3->op12\r\nop12->loop6\r\nop13->loop5\r\n\r\n\r\n\r\ncond3(no)->cond4\r\ncond4(yes)->op4\r\ncond4(no)->cond5\r\ncond5(yes)->op5\r\ncond5(no)->op6\r\nloop1(yes)->loop2\r\nloop1(no)->op9\r\nloop2(yes)->op1\r\nloop2(no)->op8\r\nloop3(yes)->loop4\r\nloop3(no)->op9\r\nloop4(yes)->op2\r\nloop4(no)->op11\r\nop2->op10\r\nop10->loop4\r\nop11->loop3\r\n\r\n\r\n\r\nop1->op7\r\n\r\nop4->op9\r\nop5->op9\r\nop6->op9\r\nop7->loop2\r\nop8->loop1\r\n";
+
+/***/ }),
+
+/***/ "./src/test/lcc.txt":
+/*!**************************!*\
+  !*** ./src/test/lcc.txt ***!
+  \**************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "st=>start: 开始\nloop1=>loop: i<10\nloop1end=>operation: i++\ncond1=>condition: 条件1\ncond2=>condition: 条件2\nop1=>operation: 语句1语句1语句1语句1语句1语句1语句1语句1语句1语句1\nop2=>operation: 语句2\n语句2\n语句2\n语句2\n语句2\nop3=>operation: 语句3\nop4=>operation: 语句4\nop5=>operation: 语句5\nop6=>operation: 语句6\nop7=>operation: 语句7\nop8=>operation: 语句8\nop9=>operation: 语句9\nst->loop1\nloop1(yes)->cond1\nloop1(no)->op4\ncond1(yes)->op1\ncond1(no)->cond2\ncond2(yes)->op2\ncond2(no)->op3\nop1->op6\nop6->op7\nop7->op8\nop8->op9\nop9->op5\nop2->op5\nop3->op5\nop5->loop1end\nloop1end->loop1";
+
+/***/ }),
+
+/***/ "./src/test/ll.txt":
+/*!*************************!*\
+  !*** ./src/test/ll.txt ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\nop1=>operation: 语句1\nloop2=>loop: j<20\nop2=>operation: j++\nop3=>operation: i++\nop4=>operation: 语句2\nloop1(yes)->op1\nop1->loop2\nloop2(yes)->op2\nop2->loop2\nloop2(no)->op3\nop3->loop1\nloop1(no)->op4";
+
+/***/ }),
+
+/***/ "./src/test/ll2.txt":
+/*!**************************!*\
+  !*** ./src/test/ll2.txt ***!
+  \**************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\r\nop1=>operation: 语句1\r\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20j<20\r\nop2=>operation: j++\r\nj++\r\nj++\r\nj++\r\nj++\r\nj++\r\nj++\r\nj++\r\nj++\r\nop3=>operation: i++\r\ni++\r\ni++\r\ni++\r\ni++\r\ni++\r\nop4=>operation: 语句2语句2语句2语句2语句2语句2语句2语句2\r\n语句2语句2语句2语句2语句2语句2语句2语句2\r\n语句2语句2语句2语句2语句2语句2语句2语句2\r\n语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2语句2\r\nloop1(yes)->op1\r\nop1->loop2\r\nloop2(yes)->op2\r\nop2->loop2\r\nloop2(no)->op3\r\nop3->loop1\r\nloop1(no)->op4\r\n";
+
+/***/ }),
+
+/***/ "./src/test/llll.txt":
+/*!***************************!*\
+  !*** ./src/test/llll.txt ***!
+  \***************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20\r\nloop3=>loop: k<30\r\nloop4=>loop: h<5\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop9=>operation: ??\r\nop5=>operation: k++\r\nop6=>operation: j++\r\nop7=>operation: i++\r\nop8=>operation: h++\r\nloop4(yes)->loop1\r\nloop4(no)->op9\r\nloop1(yes)->op1\r\nloop1(no)->op4\r\nloop2(yes)->op2\r\nloop2(no)->op7\r\nloop3(yes)->op3\r\nloop3(no)->op6\r\nop1->loop2\r\nop2->loop3\r\nop3->op5\r\nop5->loop3\r\nop6->loop2\r\nop7->loop1\r\nop4->op8\r\nop8->loop4";
+
+/***/ }),
+
+/***/ "./src/test/llll2.txt":
+/*!****************************!*\
+  !*** ./src/test/llll2.txt ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\r\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\r\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop9=>operation: ??\r\nop5=>operation: k++\r\nop6=>operation: j++\r\nop7=>operation: i++\r\nop8=>operation: h++\r\nloop4(yes)->loop1\r\nloop4(no)->op9\r\nloop1(yes)->op1\r\nloop1(no)->op4\r\nloop2(yes)->op2\r\nloop2(no)->op7\r\nloop3(yes)->op3\r\nloop3(no)->op6\r\nop1->loop2\r\nop2->loop3\r\nop3->op5\r\nop5->loop3\r\nop6->loop2\r\nop7->loop1\r\nop4->op8\r\nop8->loop4";
+
+/***/ }),
+
+/***/ "./src/test/llllcc.txt":
+/*!*****************************!*\
+  !*** ./src/test/llllcc.txt ***!
+  \*****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20\r\nloop3=>loop: k<30\r\nloop4=>loop: h<5\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop9=>operation: ??\r\nop5=>operation: k++\r\nop6=>operation: j++\r\nop7=>operation: i++\r\nop8=>operation: h++\r\nop10=>operation: 语句5\r\nop11=>operation: 语句6\r\nop12=>operation: 语句7\r\ncond1=>condition: 条件A\r\ncond2=>condition: 条件B\r\nloop4(yes)->loop1\r\nloop4(no)->op9\r\nloop1(yes)->op1\r\nloop1(no)->op4\r\nloop2(yes)->op2\r\nloop2(no)->op7\r\nloop3(yes)->op3\r\nloop3(no)->op6\r\nop1->loop2\r\nop2->loop3\r\nop3->cond1\r\ncond1(yes)->op10\r\n\r\ncond1(no)->cond2\r\n\r\ncond2(yes)->op11\r\n\r\ncond2(no)->op12\r\nop12->op5\r\n\r\n\r\n\r\nop10->op5\r\n\r\nop11->op5\r\nop5->loop3\r\nop6->loop2\r\nop7->loop1\r\nop4->op8\r\nop8->loop4";
+
+/***/ }),
+
+/***/ "./src/test/llllcc2.txt":
+/*!******************************!*\
+  !*** ./src/test/llllcc2.txt ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\r\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\r\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop9=>operation: ??\r\nop5=>operation: k++\r\nop6=>operation: j++\r\nop7=>operation: i++\r\nop8=>operation: h++\r\nop10=>operation: 语句5\r\nop11=>operation: 语句6\r\nop12=>operation: 语句7\r\ncond1=>condition: 条件A\r\ncond2=>condition: 条件B\r\nloop4(yes)->loop1\r\nloop4(no)->op9\r\nloop1(yes)->op1\r\nloop1(no)->op4\r\nloop2(yes)->op2\r\nloop2(no)->op7\r\nloop3(yes)->op3\r\nloop3(no)->op6\r\nop1->loop2\r\nop2->loop3\r\nop3->cond1\r\ncond1(yes)->op10\r\n\r\ncond1(no)->cond2\r\n\r\ncond2(yes)->op11\r\n\r\ncond2(no)->op12\r\nop12->op5\r\n\r\n\r\n\r\nop10->op5\r\n\r\nop11->op5\r\nop5->loop3\r\nop6->loop2\r\nop7->loop1\r\nop4->op8\r\nop8->loop4\r\n";
 
 /***/ })
 

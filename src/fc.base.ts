@@ -24,6 +24,7 @@ class BaseNode {
 
   notOk: boolean = false;
   w: number = 0;
+  l: number = 0;
 
   get geometry() {
     return this.vertex.geometry;

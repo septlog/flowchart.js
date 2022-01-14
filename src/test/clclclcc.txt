@@ -1,0 +1,69 @@
+cond1=>condition: 1
+cond2=>condition: 2
+cond3=>condition: 3
+cond4=>condition: 4
+cond5=>condition: 5
+loop1=>loop: i<10
+loop2=>loop: j<10
+loop3=>loop: i<10
+loop4=>loop: j<10
+op1=>operation: a()
+op2=>operation: a()
+op3=>operation: a()
+op4=>operation: a()
+op5=>operation: a()
+op6=>operation: a()
+op7=>operation: j++
+op8=>operation: i++
+op9=>operation: end
+
+op10=>operation: j++
+op11=>operation: i++
+
+op12=>operation: j++
+op13=>operation: i++
+loop5=>loop: i<10
+loop6=>loop: j<10
+
+
+cond1(yes)->loop1
+cond1(no)->cond2
+cond2(yes)->loop3
+cond2(no)->cond3
+cond3(yes)->loop5
+loop5(yes)->loop6
+loop5(no)->op9
+loop6(yes)->op3
+loop6(no)->op13
+op3->op12
+op12->loop6
+op13->loop5
+
+
+
+cond3(no)->cond4
+cond4(yes)->op4
+cond4(no)->cond5
+cond5(yes)->op5
+cond5(no)->op6
+loop1(yes)->loop2
+loop1(no)->op9
+loop2(yes)->op1
+loop2(no)->op8
+loop3(yes)->loop4
+loop3(no)->op9
+loop4(yes)->op2
+loop4(no)->op11
+op2->op10
+op10->loop4
+op11->loop3
+
+
+
+op1->op7
+
+op4->op9
+op5->op9
+op6->op9
+op7->loop2
+op8->loop1

@@ -83,7 +83,7 @@ class ConditionNode extends BaseNode {
         nextNode.condNodes = [...this.condNodes, this];
 
         nextNode.row = this.row + 1;
-        nextNode.col = this.col + this.conds;
+        nextNode.col = this.col + 1;
 
         this.updateRow(nextNode.row);
         this.updateCol(nextNode.col);

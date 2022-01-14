@@ -90,69 +90,12 @@ export class Chart implements IChart {
     }
 
     this.re();
-    this.reLine2(this.start);
+    this.loopRight(this.start);
+
+    this.re();
+    this.loopLeft(this.start);
     this.re();
     this.reLine(this.start);
-    for (let nodeName in this.nodes) {
-      let node = this.nodes[nodeName];
-
-      if (node instanceof OperationNode) {
-        node.drawLine();
-
-        if (node.backNode) {
-          // node.drawLine();
-          let w = node.geometry.x;
-
-          for (let i = node.loopNode.row; i <= node.row; i++) {
-            let childRowNodes = this.findRowNodes(i);
-            for (let childRowNode of childRowNodes) {
-              if (childRowNode.col === node.col) {
-                if (childRowNode.geometry.x < w) {
-                  w = childRowNode.geometry.x;
-                }
-              }
-            }
-          }
-
-          let edge = graph.insertEdge(
-            parent,
-            null,
-            '',
-            node.vertex,
-            node.backNode.vertex,
-          );
-          edge.geometry.points = [
-            new mxgraph.mxPoint(
-              node.leftMost,
-              node.geometry.y + node.geometry.height / 2,
-            ),
-            new mxgraph.mxPoint(
-              w - 20 * node.backNode.loops,
-              node.geometry.y + node.geometry.height / 2,
-            ),
-
-            new mxgraph.mxPoint(
-              w - 20 * node.backNode.loops,
-              edge.target.geometry.y + 20,
-            ),
-            new mxgraph.mxPoint(
-              edge.target.geometry.x + edge.target.geometry.width / 2,
-              edge.target.geometry.y - 20,
-            ),
-            new mxgraph.mxPoint(
-              edge.target.geometry.x + edge.target.geometry.width / 2,
-              edge.target.geometry.y,
-            ),
-          ];
-
-          if (node.backNode.loopNode) {
-            node.backNode.loopNode.updateLoops();
-          }
-        } else {
-          node.drawLine();
-        }
-      }
-    }
   }
   constructChart(token: Token) {
     let node = this.getNode(token);
@@ -227,6 +170,15 @@ export class Chart implements IChart {
           nextNode.down(node.row + 1 - nextNode.row);
           // this.rows += node.row + 1 - nextNode.row;
         }
+
+        let backNode = node.backNode;
+        if (
+          backNode &&
+          backNode.noNodeRow !== 0 &&
+          backNode.noNodeRow < node.row + 1
+        ) {
+          backNode.noNode.down(node.row + 1 - backNode.noNodeRow);
+        }
         if (token.next) {
           this.rePosition(token.next);
         }
@@ -248,91 +200,6 @@ export class Chart implements IChart {
     }
   }
 
-  // reLine(token: Token) {
-  //   let node = this.getNode(token);
-  //   if (!node.visited) {
-  //     node.visited = true;
-  //     if (node instanceof OperationNode) {
-  //       node.drawLine();
-
-  //       let w = node.geometry.x + node.geometry.width;
-  //       if (token.next) {
-  //         let nextW = this.reLine(token.next);
-  //         if (nextW > w) {
-  //           w = nextW;
-  //         }
-  //       }
-  //       return w;
-  //     } else if (node instanceof LoopNode) {
-  //       node.drawLine();
-  //       let w = node.geometry.x + node.geometry.width;
-  //       if (token.yes) {
-  //         let yesW = this.reLine(token.yes);
-  //         console.log(yesW);
-  //         if (yesW > w) {
-  //           w = yesW;
-  //         }
-  //       }
-
-  //       w = w + 20;
-  //       let edge = graph.insertEdge(
-  //         parent,
-  //         null,
-  //         '',
-  //         node.vertex,
-  //         node.noNode.vertex,
-  //       );
-
-  //       edge.geometry.points = [
-  //         new mxgraph.mxPoint(
-  //           node.geometry.x + node.geometry.width,
-  //           node.geometry.y + node.geometry.height / 2,
-  //         ),
-  //         new mxgraph.mxPoint(w, node.geometry.y + node.geometry.height / 2),
-  //         new mxgraph.mxPoint(w, node.noNode.geometry.y - 20),
-  //         new mxgraph.mxPoint(
-  //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
-  //           node.noNode.geometry.y - 20,
-  //         ),
-  //         new mxgraph.mxPoint(
-  //           node.noNode.geometry.x + node.noNode.geometry.width / 2,
-  //           node.noNode.geometry.y,
-  //         ),
-  //       ];
-  //       if (token.no) {
-  //         let noW = this.reLine(token.no);
-  //         if (noW > w) {
-  //           w = noW;
-  //         }
-  //       }
-  //       return w;
-  //     } else if (node instanceof ConditionNode) {
-  //       node.drawLine();
-  //       let w = node.geometry.x + node.geometry.width;
-  //       let yesW = 0;
-  //       if (token.yes) {
-  //         yesW = this.reLine(token.yes);
-  //         if (yesW > w) {
-  //           w = yesW;
-  //         }
-  //       }
-
-  //       if (token.no) {
-  //         let noW = this.reLine(token.no);
-
-  //         if (w < yesW) {
-  //           node.noNode.setX(yesW + 20);
-  //         }
-  //         if (noW > w) {
-  //           w = noW;
-  //           // node.noNode.setX(w);
-  //         }
-  //       }
-  //       return w;
-  //     }
-  //   }
-  // }
-
   reLine(token: Token) {
     let node = this.getNode(token);
     if (!node.visited) {
@@ -340,6 +207,33 @@ export class Chart implements IChart {
       if (node instanceof OperationNode) {
         node.drawLine();
 
+        if (node.backNode) {
+          let edge = graph.insertEdge(
+            parent,
+            null,
+            '',
+            node.vertex,
+            node.backNode.vertex,
+          );
+          let l = node.backNode.l;
+          edge.geometry.points = [
+            new mxgraph.mxPoint(
+              node.leftMost,
+              node.geometry.y + node.geometry.height / 2,
+            ),
+            new mxgraph.mxPoint(l, node.geometry.y + node.geometry.height / 2),
+
+            new mxgraph.mxPoint(l, edge.target.geometry.y + 20),
+            new mxgraph.mxPoint(
+              edge.target.geometry.x + edge.target.geometry.width / 2,
+              edge.target.geometry.y - 20,
+            ),
+            new mxgraph.mxPoint(
+              edge.target.geometry.x + edge.target.geometry.width / 2,
+              edge.target.geometry.y,
+            ),
+          ];
+        }
         if (token.next) {
           this.reLine(token.next);
         }
@@ -391,41 +285,39 @@ export class Chart implements IChart {
     }
   }
 
-  reLine2(token: Token) {
+  loopRight(token: Token): number {
     let node = this.getNode(token);
     if (!node.visited) {
       node.visited = true;
       if (node instanceof OperationNode) {
         let w = node.geometry.x + node.geometry.width;
         if (token.next) {
-          let nextW = this.reLine2(token.next);
+          let nextW = this.loopRight(token.next);
           if (nextW > w) {
             w = nextW;
           }
         }
         node.w = w;
+        // this.colMap.set(node.col, w);
         return w;
       } else if (node instanceof LoopNode) {
         let w = node.geometry.x + node.geometry.width;
         if (token.yes) {
-          let yesW = this.reLine2(token.yes) + 20;
+          let yesW = this.loopRight(token.yes);
           if (yesW > w) {
             w = yesW;
           }
         }
 
-        if (token.no) {
-          let noW = this.reLine2(token.no) + 20;
-          if (noW > w) {
-            w = noW;
-          }
-        }
+        w += 20;
         node.w = w;
+
+        // this.colMap.set(node.col, w);
         return w;
       } else if (node instanceof ConditionNode) {
         let w = node.geometry.x + node.geometry.width;
         if (token.yes) {
-          let yesW = this.reLine2(token.yes) + 20;
+          let yesW = this.loopRight(token.yes);
           if (yesW > w) {
             w = yesW;
           }
@@ -433,14 +325,94 @@ export class Chart implements IChart {
 
         if (token.no) {
           node.noNode.setX2(w + 40);
-          let noW = this.reLine2(token.no);
+          let noW = this.loopRight(token.no);
 
           if (noW > w) {
             w = noW;
           }
         }
         node.w = w;
+        // this.colMap.set(node.col, w);
         return w;
+      }
+    }
+  }
+
+  loopLeft(token: Token) {
+    let node = this.getNode(token);
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        let l = node.geometry.x;
+        if (token.next) {
+          let nextL = this.loopLeft(token.next);
+          if (nextL < l) {
+            l = nextL;
+          }
+        }
+        node.l = l;
+
+        // let leftNode = this.findNode(node.col - 1, node.row);
+        // if (leftNode && l < leftNode.w) {
+        //   let diff = l - leftNode.w + 20;
+        //   console.log(node.token.text);
+        //   node.setX2(node.geometry.x + diff);
+        //   l += diff;
+        //   node.l = l;
+        //   node.w = node.w + leftNode.w - l + 20;
+        // }
+
+        return l;
+      } else if (node instanceof LoopNode) {
+        let l = node.geometry.x;
+        if (token.yes) {
+          let yesL = this.loopLeft(token.yes);
+          if (yesL < l) {
+            l = yesL;
+          }
+        }
+
+        if (token.no) {
+          this.loopLeft(token.no);
+        }
+
+        l -= 20;
+        node.l = l;
+
+        // let leftNode = this.findNode(node.col - 1, node.row);
+        // if (leftNode && l < leftNode.w) {
+        //   let diff = l - leftNode.w + 20;
+        //   console.log(node.token.text);
+        //   node.setX2(node.geometry.x + diff);
+        //   l += diff;
+        //   node.l = l;
+        //   node.w = node.w + leftNode.w - l + 20;
+        // }
+
+        return l;
+      } else if (node instanceof ConditionNode) {
+        let l = node.geometry.x;
+        if (token.yes) {
+          let yesL = this.loopLeft(token.yes);
+          if (yesL < l) {
+            l = yesL;
+          }
+        }
+        if (token.no) {
+          this.loopLeft(token.no);
+        }
+        node.l = l;
+
+        // let leftNode = this.findNode(node.col - 1, node.row);
+        // if (leftNode && l < leftNode.w) {
+        //   let diff = leftNode.w - l + 20;
+        //   console.log(node.token.text);
+        //   node.setX2(node.geometry.x + diff);
+        //   l += diff;
+        //   node.l = l;
+        //   node.w += diff;
+        // }
+        return l;
       }
     }
   }
@@ -485,6 +457,12 @@ export class Chart implements IChart {
   }
 
   findNode(x: number, y: number) {
+    if (x < 1) {
+      return undefined;
+    }
+    if (y < 1) {
+      return undefined;
+    }
     for (let nodeName in this.nodes) {
       let node = this.nodes[nodeName];
 
