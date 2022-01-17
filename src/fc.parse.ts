@@ -37,6 +37,8 @@ export class Chart implements IChart {
 
   rowMap: Map<any, any> = new Map();
   colMap: Map<any, any> = new Map();
+  lMap: Map<number, number> = new Map();
+  wMap: Map<number, number> = new Map();
   constructor() {
     this.tokens = {};
     this.nodes = {};
@@ -90,10 +92,33 @@ export class Chart implements IChart {
     }
 
     this.re();
-    this.loopRight(this.start);
+    this.iterateW(this.getNode(this.start));
+    this.re();
+    this.iterateL(this.getNode(this.start));
+
+    for (let nodeName in this.nodes) {
+      let node = this.nodes[nodeName];
+      if (node instanceof LoopNode) {
+        let nextNode = node.yesNode;
+        nextNode.ww = node.ww;
+        nextNode.ll = node.ll;
+        while (nextNode.bottomNode) {
+          nextNode = nextNode.bottomNode;
+          nextNode.ww = node.ww;
+          nextNode.ll = node.ll;
+        }
+
+        node.noNode.ww = node.ww;
+        node.noNode.ll = node.ll;
+      }
+    }
 
     this.re();
-    this.loopLeft(this.start);
+    this.rerere(this.getNode(this.start));
+
+    // this.re();
+    // this.rePosition2(this.getNode(this.start));
+
     this.re();
     this.reLine(this.start);
   }
@@ -200,6 +225,49 @@ export class Chart implements IChart {
     }
   }
 
+  rePosition2(node: BaseNode) {
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        if (node.nextNode) {
+          if (
+            node.nextNode.geometry.x + node.nextNode.geometry.width / 2 !==
+            node.geometry.x + node.geometry.x / 2
+          ) {
+            console.log(node.token.name);
+          }
+          this.rePosition2(node.nextNode);
+        }
+      } else if (node instanceof LoopNode) {
+        if (node.yesNode) {
+          if (
+            node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
+            node.geometry.x + node.geometry.x / 2
+          ) {
+            console.log(node.token.name);
+          }
+          this.rePosition2(node.yesNode);
+        }
+        if (node.noNode) {
+          this.rePosition2(node.noNode);
+        }
+      } else if (node instanceof ConditionNode) {
+        if (node.yesNode) {
+          if (
+            node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
+            node.geometry.x + node.geometry.x / 2
+          ) {
+            console.log(node.token.name);
+          }
+          this.rePosition2(node.yesNode);
+        }
+        if (node.noNode) {
+          this.rePosition2(node.noNode);
+        }
+      }
+    }
+  }
+
   reLine(token: Token) {
     let node = this.getNode(token);
     if (!node.visited) {
@@ -285,25 +353,48 @@ export class Chart implements IChart {
     }
   }
 
-  loopRight(token: Token): number {
-    let node = this.getNode(token);
+  iterateW(node: BaseNode): number {
     if (!node.visited) {
       node.visited = true;
       if (node instanceof OperationNode) {
         let w = node.geometry.x + node.geometry.width;
-        if (token.next) {
-          let nextW = this.loopRight(token.next);
+        if (node.nextNode && node.nextNode.col === node.col) {
+          let nextW = this.iterateW(node.nextNode);
           if (nextW > w) {
             w = nextW;
           }
         }
         node.w = w;
-        // this.colMap.set(node.col, w);
+        node.ww = w;
+        return w;
+      } else if (node instanceof ConditionNode) {
+        let w = node.geometry.x + node.geometry.width;
+        if (node.yesNode) {
+          let yesW = this.iterateW(node.yesNode);
+          if (yesW > w) {
+            w = yesW;
+          }
+        }
+
+        if (node.token.name === '3') {
+          console.log(w);
+        }
+
+        if (node.noNode) {
+          node.noNode.setX2(w + 40);
+          let noW = this.iterateW(node.noNode);
+          if (noW > w) {
+            w = noW;
+          }
+        }
+
+        node.w = w;
+        node.ww = w;
         return w;
       } else if (node instanceof LoopNode) {
         let w = node.geometry.x + node.geometry.width;
-        if (token.yes) {
-          let yesW = this.loopRight(token.yes);
+        if (node.yesNode) {
+          let yesW = this.iterateW(node.yesNode);
           if (yesW > w) {
             w = yesW;
           }
@@ -311,108 +402,124 @@ export class Chart implements IChart {
 
         w += 20;
         node.w = w;
-
-        // this.colMap.set(node.col, w);
-        return w;
-      } else if (node instanceof ConditionNode) {
-        let w = node.geometry.x + node.geometry.width;
-        if (token.yes) {
-          let yesW = this.loopRight(token.yes);
-          if (yesW > w) {
-            w = yesW;
-          }
-        }
-
-        if (token.no) {
-          node.noNode.setX2(w + 40);
-          let noW = this.loopRight(token.no);
-
-          if (noW > w) {
-            w = noW;
-          }
-        }
-        node.w = w;
-        // this.colMap.set(node.col, w);
+        node.ww = w;
         return w;
       }
     }
   }
 
-  loopLeft(token: Token) {
-    let node = this.getNode(token);
+  iterateL(node: BaseNode): number {
     if (!node.visited) {
       node.visited = true;
       if (node instanceof OperationNode) {
         let l = node.geometry.x;
-        if (token.next) {
-          let nextL = this.loopLeft(token.next);
+        node.ll = l;
+        if (node.nextNode) {
+          let nextL = this.iterateL(node.nextNode);
           if (nextL < l) {
             l = nextL;
           }
         }
         node.l = l;
 
-        // let leftNode = this.findNode(node.col - 1, node.row);
-        // if (leftNode && l < leftNode.w) {
-        //   let diff = l - leftNode.w + 20;
-        //   console.log(node.token.text);
-        //   node.setX2(node.geometry.x + diff);
-        //   l += diff;
-        //   node.l = l;
-        //   node.w = node.w + leftNode.w - l + 20;
-        // }
-
         return l;
       } else if (node instanceof LoopNode) {
         let l = node.geometry.x;
-        if (token.yes) {
-          let yesL = this.loopLeft(token.yes);
+
+        if (node.yesNode) {
+          let yesL = this.iterateL(node.yesNode);
           if (yesL < l) {
             l = yesL;
           }
         }
 
-        if (token.no) {
-          this.loopLeft(token.no);
+        if (node.noNode) {
+          let noL = this.iterateL(node.noNode);
         }
 
         l -= 20;
         node.l = l;
 
-        // let leftNode = this.findNode(node.col - 1, node.row);
-        // if (leftNode && l < leftNode.w) {
-        //   let diff = l - leftNode.w + 20;
-        //   console.log(node.token.text);
-        //   node.setX2(node.geometry.x + diff);
-        //   l += diff;
-        //   node.l = l;
-        //   node.w = node.w + leftNode.w - l + 20;
-        // }
+        node.ll = l;
 
         return l;
       } else if (node instanceof ConditionNode) {
         let l = node.geometry.x;
-        if (token.yes) {
-          let yesL = this.loopLeft(token.yes);
+        node.ll = l;
+        if (node.yesNode) {
+          let yesL = this.iterateL(node.yesNode);
           if (yesL < l) {
             l = yesL;
           }
         }
-        if (token.no) {
-          this.loopLeft(token.no);
+
+        if (node.noNode) {
+          let noL = this.iterateL(node.noNode);
+          if (noL < l) {
+            l = noL;
+          }
         }
         node.l = l;
 
-        // let leftNode = this.findNode(node.col - 1, node.row);
-        // if (leftNode && l < leftNode.w) {
-        //   let diff = leftNode.w - l + 20;
-        //   console.log(node.token.text);
-        //   node.setX2(node.geometry.x + diff);
-        //   l += diff;
-        //   node.l = l;
-        //   node.w += diff;
-        // }
         return l;
+      }
+    }
+  }
+
+  rerere(node: BaseNode) {
+    if (!node.visited) {
+      node.visited = true;
+      if (node instanceof OperationNode) {
+        let leftNode = this.findNode(node.col - 1, node.row);
+        if (leftNode) {
+          if (leftNode.ww > node.ll) {
+            console.log(node.token.name);
+            let diff = leftNode.ww - node.ll + 20;
+            console.log(node.token.name);
+            node.setX3(diff);
+            node.setX4(diff);
+          }
+        }
+
+        if (node.nextNode) {
+          this.rerere(node.nextNode);
+        }
+      } else if (node instanceof ConditionNode) {
+        let leftNode = this.findNode(node.col - 1, node.row);
+        if (leftNode) {
+          if (leftNode.ww > node.ll) {
+            console.log(node.token.name);
+            let diff = leftNode.ww - node.ll + 20;
+
+            node.setX3(diff);
+            node.setX4(diff);
+          }
+        }
+
+        if (node.yesNode) {
+          this.rerere(node.yesNode);
+        }
+        if (node.noNode) {
+          this.rerere(node.noNode);
+        }
+      } else if (node instanceof LoopNode) {
+        let leftNode = this.findNode(node.col - 1, node.row);
+        if (leftNode) {
+          if (leftNode.ww > node.ll) {
+            console.log(node.token.name);
+            let diff = leftNode.ww - node.ll + 20;
+
+            node.setX3(diff);
+            node.setX4(diff);
+          }
+        }
+
+        if (node.yesNode) {
+          this.rerere(node.yesNode);
+        }
+        if (node.noNode) {
+          this.rerere(node.noNode);
+        }
       }
     }
   }
@@ -505,6 +612,7 @@ export class Chart implements IChart {
       return true;
     }
   }
+
   intersectY(topNode: BaseNode, bottomNode: BaseNode) {
     if (
       bottomNode.geometry.y <

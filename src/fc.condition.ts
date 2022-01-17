@@ -39,6 +39,9 @@ class ConditionNode extends BaseNode {
       if (!nextNode.placed) {
         nextNode.placed = true;
 
+        nextNode.topNode = this;
+        this.bottomNode = nextNode;
+
         nextNode.condNode = this;
         nextNode.loopNode = this.loopNode;
 
@@ -181,7 +184,35 @@ class ConditionNode extends BaseNode {
     }
   }
 
-  updateEndRow() {}
+  setXX(diff: number): void {
+    this.geometry.x += diff;
+    this.w += diff;
+    this.l += diff;
+  }
+
+  setX3(diff: number) {
+    this.moved = true;
+
+    this.geometry.x += diff;
+    this.ww += diff;
+    this.ll += diff;
+    if (this.bottomNode) {
+      this.bottomNode.setX3(diff);
+    }
+
+    if (this.noNode) {
+      this.noNode.setX3(diff);
+    }
+  }
+
+  setXtop(diff: number) {
+    if (this.topNode) {
+      this.topNode.geometry.x += diff;
+      this.topNode.w += diff;
+      this.topNode.l += diff;
+      this.topNode.setXtop(diff);
+    }
+  }
 }
 
 export default ConditionNode;

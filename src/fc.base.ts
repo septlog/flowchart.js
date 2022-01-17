@@ -24,7 +24,14 @@ class BaseNode {
 
   notOk: boolean = false;
   w: number = 0;
+  ww: number = 0;
   l: number = 0;
+  ll: number = 0;
+
+  moved: boolean = false;
+
+  topNode: BaseNode;
+  bottomNode: BaseNode;
 
   get geometry() {
     return this.vertex.geometry;
@@ -67,6 +74,38 @@ class BaseNode {
 
   setX2(num: number) {}
 
+  setX3(number: number) {}
+
+  setX4(diff: number) {
+    if (this.topNode && !this.topNode.moved) {
+      this.topNode.geometry.x += diff;
+      this.ww += diff;
+      this.ll += diff;
+      this.w += diff;
+      this.l += diff;
+      this.topNode.setX4(diff);
+    }
+  }
+
+  setXtop(diff: number) {
+    if (this.topNode) {
+      this.topNode.geometry.x += diff;
+      this.topNode.ww += diff;
+      this.topNode.ll += diff;
+      this.topNode.setXtop(diff);
+    }
+  }
+
+  setXbottom(diff: number): void {
+    if (this.bottomNode) {
+      this.bottomNode.geometry.x += diff;
+      this.bottomNode.w += diff;
+      this.bottomNode.l += diff;
+      this.bottomNode.setXbottom(diff);
+    }
+  }
+
+  setXX(diff: number) {}
   setY(num: number) {
     this.geometry.y = num;
   }

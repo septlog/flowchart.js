@@ -41,10 +41,14 @@ class LoopNode extends BaseNode {
 
     if (!this.yesVisited) {
       this.yesVisited = true;
+
       nextNode.loopNode = this;
 
       if (!nextNode.placed) {
         nextNode.placed = true;
+
+        nextNode.topNode = this;
+        this.bottomNode = nextNode;
 
         nextNode.row = this.row + 1;
         nextNode.col = this.col;
@@ -142,6 +146,41 @@ class LoopNode extends BaseNode {
             this.noNode.geometry.width / 2,
         );
       }
+    }
+  }
+
+  setX3(diff: number) {
+    this.moved = true;
+    this.geometry.x += diff;
+    this.ww += diff;
+    this.ll += diff;
+    this.w += diff;
+    this.l += diff;
+
+    if (this.bottomNode) {
+      this.bottomNode.setX3(diff);
+    }
+
+    if (this.noNode && this.noNode.col === this.col) {
+      this.noNode.setX3(diff);
+    }
+  }
+
+  setXtop(diff: number) {
+    if (this.topNode) {
+      this.topNode.geometry.x += diff;
+      this.topNode.w += diff;
+      this.topNode.l += diff;
+      this.topNode.setXtop(diff);
+    }
+  }
+
+  setXbottom(diff: number): void {
+    if (this.bottomNode) {
+      this.bottomNode.geometry.x += diff;
+      this.bottomNode.w += diff;
+      this.bottomNode.l += diff;
+      this.bottomNode.setXbottom(diff);
     }
   }
 }

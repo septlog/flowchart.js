@@ -28,6 +28,9 @@ class OperationNode extends BaseNode {
       if (!nextNode.placed) {
         nextNode.placed = true;
 
+        this.bottomNode = nextNode;
+        nextNode.topNode = this;
+
         nextNode.loopNode = this.loopNode;
 
         nextNode.condNode = this.condNode;
@@ -131,6 +134,26 @@ class OperationNode extends BaseNode {
           this.nextNode.geometry.width / 2,
       );
     }
+  }
+
+  setX3(diff: number) {
+    this.moved = true;
+
+    this.geometry.x += diff;
+    this.ww += diff;
+    this.ll += diff;
+    // let topNode = this.topNode;
+    // let bottomNode = this.bottomNode;
+    // topNode.setX3(diff);
+
+    // bottomNode.setX3(diff);
+    if (this.bottomNode) {
+      this.bottomNode.setX3(diff);
+    }
+
+    // if (this.topNode) {
+    //   this.topNode.setXtop(diff);
+    // }
   }
 }
 

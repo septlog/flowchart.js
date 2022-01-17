@@ -92579,7 +92579,10 @@ var BaseNode = /** @class */ (function () {
         this.lineLength = 40;
         this.notOk = false;
         this.w = 0;
+        this.ww = 0;
         this.l = 0;
+        this.ll = 0;
+        this.moved = false;
         this.token = token;
         this.chart = chart;
     }
@@ -92622,6 +92625,34 @@ var BaseNode = /** @class */ (function () {
         this.geometry.x = num;
     };
     BaseNode.prototype.setX2 = function (num) { };
+    BaseNode.prototype.setX3 = function (number) { };
+    BaseNode.prototype.setX4 = function (diff) {
+        if (this.topNode && !this.topNode.moved) {
+            this.topNode.geometry.x += diff;
+            this.ww += diff;
+            this.ll += diff;
+            this.w += diff;
+            this.l += diff;
+            this.topNode.setX4(diff);
+        }
+    };
+    BaseNode.prototype.setXtop = function (diff) {
+        if (this.topNode) {
+            this.topNode.geometry.x += diff;
+            this.topNode.ww += diff;
+            this.topNode.ll += diff;
+            this.topNode.setXtop(diff);
+        }
+    };
+    BaseNode.prototype.setXbottom = function (diff) {
+        if (this.bottomNode) {
+            this.bottomNode.geometry.x += diff;
+            this.bottomNode.w += diff;
+            this.bottomNode.l += diff;
+            this.bottomNode.setXbottom(diff);
+        }
+    };
+    BaseNode.prototype.setXX = function (diff) { };
     BaseNode.prototype.setY = function (num) {
         this.geometry.y = num;
     };
@@ -92703,6 +92734,8 @@ var ConditionNode = /** @class */ (function (_super) {
             // 如果没有被放置
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                nextNode.topNode = this;
+                this.bottomNode = nextNode;
                 nextNode.condNode = this;
                 nextNode.loopNode = this.loopNode;
                 // nextNode.condNodes = this.condNodes;
@@ -92806,7 +92839,31 @@ var ConditionNode = /** @class */ (function (_super) {
             this.condNode.updateConds();
         }
     };
-    ConditionNode.prototype.updateEndRow = function () { };
+    ConditionNode.prototype.setXX = function (diff) {
+        this.geometry.x += diff;
+        this.w += diff;
+        this.l += diff;
+    };
+    ConditionNode.prototype.setX3 = function (diff) {
+        this.moved = true;
+        this.geometry.x += diff;
+        this.ww += diff;
+        this.ll += diff;
+        if (this.bottomNode) {
+            this.bottomNode.setX3(diff);
+        }
+        if (this.noNode) {
+            this.noNode.setX3(diff);
+        }
+    };
+    ConditionNode.prototype.setXtop = function (diff) {
+        if (this.topNode) {
+            this.topNode.geometry.x += diff;
+            this.topNode.w += diff;
+            this.topNode.l += diff;
+            this.topNode.setXtop(diff);
+        }
+    };
     return ConditionNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ConditionNode);
@@ -92911,6 +92968,8 @@ var LoopNode = /** @class */ (function (_super) {
             nextNode.loopNode = this;
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                nextNode.topNode = this;
+                this.bottomNode = nextNode;
                 nextNode.row = this.row + 1;
                 nextNode.col = this.col;
                 this.updateRow(nextNode.row);
@@ -92993,6 +93052,36 @@ var LoopNode = /** @class */ (function (_super) {
             }
         }
     };
+    LoopNode.prototype.setX3 = function (diff) {
+        this.moved = true;
+        this.geometry.x += diff;
+        this.ww += diff;
+        this.ll += diff;
+        this.w += diff;
+        this.l += diff;
+        if (this.bottomNode) {
+            this.bottomNode.setX3(diff);
+        }
+        if (this.noNode && this.noNode.col === this.col) {
+            this.noNode.setX3(diff);
+        }
+    };
+    LoopNode.prototype.setXtop = function (diff) {
+        if (this.topNode) {
+            this.topNode.geometry.x += diff;
+            this.topNode.w += diff;
+            this.topNode.l += diff;
+            this.topNode.setXtop(diff);
+        }
+    };
+    LoopNode.prototype.setXbottom = function (diff) {
+        if (this.bottomNode) {
+            this.bottomNode.geometry.x += diff;
+            this.bottomNode.w += diff;
+            this.bottomNode.l += diff;
+            this.bottomNode.setXbottom(diff);
+        }
+    };
     return LoopNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_0__["default"]));
 
@@ -93033,6 +93122,8 @@ var Chart = /** @class */ (function () {
         this.cols = 1;
         this.rowMap = new Map();
         this.colMap = new Map();
+        this.lMap = new Map();
+        this.wMap = new Map();
         this.tokens = {};
         this.nodes = {};
     }
@@ -93080,9 +93171,28 @@ var Chart = /** @class */ (function () {
             }
         }
         this.re();
-        this.loopRight(this.start);
+        this.iterateW(this.getNode(this.start));
         this.re();
-        this.loopLeft(this.start);
+        this.iterateL(this.getNode(this.start));
+        for (var nodeName in this.nodes) {
+            var node = this.nodes[nodeName];
+            if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                var nextNode = node.yesNode;
+                nextNode.ww = node.ww;
+                nextNode.ll = node.ll;
+                while (nextNode.bottomNode) {
+                    nextNode = nextNode.bottomNode;
+                    nextNode.ww = node.ww;
+                    nextNode.ll = node.ll;
+                }
+                node.noNode.ww = node.ww;
+                node.noNode.ll = node.ll;
+            }
+        }
+        this.re();
+        this.rerere(this.getNode(this.start));
+        // this.re();
+        // this.rePosition2(this.getNode(this.start));
         this.re();
         this.reLine(this.start);
     };
@@ -93188,6 +93298,44 @@ var Chart = /** @class */ (function () {
             }
         }
     };
+    Chart.prototype.rePosition2 = function (node) {
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                if (node.nextNode) {
+                    if (node.nextNode.geometry.x + node.nextNode.geometry.width / 2 !==
+                        node.geometry.x + node.geometry.x / 2) {
+                        console.log(node.token.name);
+                    }
+                    this.rePosition2(node.nextNode);
+                }
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                if (node.yesNode) {
+                    if (node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
+                        node.geometry.x + node.geometry.x / 2) {
+                        console.log(node.token.name);
+                    }
+                    this.rePosition2(node.yesNode);
+                }
+                if (node.noNode) {
+                    this.rePosition2(node.noNode);
+                }
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                if (node.yesNode) {
+                    if (node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
+                        node.geometry.x + node.geometry.x / 2) {
+                        console.log(node.token.name);
+                    }
+                    this.rePosition2(node.yesNode);
+                }
+                if (node.noNode) {
+                    this.rePosition2(node.noNode);
+                }
+            }
+        }
+    };
     Chart.prototype.reLine = function (token) {
         var node = this.getNode(token);
         if (!node.visited) {
@@ -93238,126 +93386,160 @@ var Chart = /** @class */ (function () {
             }
         }
     };
-    Chart.prototype.loopRight = function (token) {
-        var node = this.getNode(token);
+    Chart.prototype.iterateW = function (node) {
         if (!node.visited) {
             node.visited = true;
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var w = node.geometry.x + node.geometry.width;
-                if (token.next) {
-                    var nextW = this.loopRight(token.next);
+                if (node.nextNode && node.nextNode.col === node.col) {
+                    var nextW = this.iterateW(node.nextNode);
                     if (nextW > w) {
                         w = nextW;
                     }
                 }
                 node.w = w;
-                // this.colMap.set(node.col, w);
+                node.ww = w;
+                return w;
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                var w = node.geometry.x + node.geometry.width;
+                if (node.yesNode) {
+                    var yesW = this.iterateW(node.yesNode);
+                    if (yesW > w) {
+                        w = yesW;
+                    }
+                }
+                if (node.token.name === '3') {
+                    console.log(w);
+                }
+                if (node.noNode) {
+                    node.noNode.setX2(w + 40);
+                    var noW = this.iterateW(node.noNode);
+                    if (noW > w) {
+                        w = noW;
+                    }
+                }
+                node.w = w;
+                node.ww = w;
                 return w;
             }
             else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
                 var w = node.geometry.x + node.geometry.width;
-                if (token.yes) {
-                    var yesW = this.loopRight(token.yes);
+                if (node.yesNode) {
+                    var yesW = this.iterateW(node.yesNode);
                     if (yesW > w) {
                         w = yesW;
                     }
                 }
                 w += 20;
                 node.w = w;
-                // this.colMap.set(node.col, w);
-                return w;
-            }
-            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
-                var w = node.geometry.x + node.geometry.width;
-                if (token.yes) {
-                    var yesW = this.loopRight(token.yes);
-                    if (yesW > w) {
-                        w = yesW;
-                    }
-                }
-                if (token.no) {
-                    node.noNode.setX2(w + 40);
-                    var noW = this.loopRight(token.no);
-                    if (noW > w) {
-                        w = noW;
-                    }
-                }
-                node.w = w;
-                // this.colMap.set(node.col, w);
+                node.ww = w;
                 return w;
             }
         }
     };
-    Chart.prototype.loopLeft = function (token) {
-        var node = this.getNode(token);
+    Chart.prototype.iterateL = function (node) {
         if (!node.visited) {
             node.visited = true;
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var l = node.geometry.x;
-                if (token.next) {
-                    var nextL = this.loopLeft(token.next);
+                node.ll = l;
+                if (node.nextNode) {
+                    var nextL = this.iterateL(node.nextNode);
                     if (nextL < l) {
                         l = nextL;
                     }
                 }
                 node.l = l;
-                // let leftNode = this.findNode(node.col - 1, node.row);
-                // if (leftNode && l < leftNode.w) {
-                //   let diff = l - leftNode.w + 20;
-                //   console.log(node.token.text);
-                //   node.setX2(node.geometry.x + diff);
-                //   l += diff;
-                //   node.l = l;
-                //   node.w = node.w + leftNode.w - l + 20;
-                // }
                 return l;
             }
             else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
                 var l = node.geometry.x;
-                if (token.yes) {
-                    var yesL = this.loopLeft(token.yes);
+                if (node.yesNode) {
+                    var yesL = this.iterateL(node.yesNode);
                     if (yesL < l) {
                         l = yesL;
                     }
                 }
-                if (token.no) {
-                    this.loopLeft(token.no);
+                if (node.noNode) {
+                    var noL = this.iterateL(node.noNode);
                 }
                 l -= 20;
                 node.l = l;
-                // let leftNode = this.findNode(node.col - 1, node.row);
-                // if (leftNode && l < leftNode.w) {
-                //   let diff = l - leftNode.w + 20;
-                //   console.log(node.token.text);
-                //   node.setX2(node.geometry.x + diff);
-                //   l += diff;
-                //   node.l = l;
-                //   node.w = node.w + leftNode.w - l + 20;
-                // }
+                node.ll = l;
                 return l;
             }
             else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
                 var l = node.geometry.x;
-                if (token.yes) {
-                    var yesL = this.loopLeft(token.yes);
+                node.ll = l;
+                if (node.yesNode) {
+                    var yesL = this.iterateL(node.yesNode);
                     if (yesL < l) {
                         l = yesL;
                     }
                 }
-                if (token.no) {
-                    this.loopLeft(token.no);
+                if (node.noNode) {
+                    var noL = this.iterateL(node.noNode);
+                    if (noL < l) {
+                        l = noL;
+                    }
                 }
                 node.l = l;
-                // let leftNode = this.findNode(node.col - 1, node.row);
-                // if (leftNode && l < leftNode.w) {
-                //   let diff = leftNode.w - l + 20;
-                //   console.log(node.token.text);
-                //   node.setX2(node.geometry.x + diff);
-                //   l += diff;
-                //   node.l = l;
-                //   node.w += diff;
-                // }
                 return l;
+            }
+        }
+    };
+    Chart.prototype.rerere = function (node) {
+        if (!node.visited) {
+            node.visited = true;
+            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+                var leftNode = this.findNode(node.col - 1, node.row);
+                if (leftNode) {
+                    if (leftNode.ww > node.ll) {
+                        console.log(node.token.name);
+                        var diff = leftNode.ww - node.ll + 20;
+                        console.log(node.token.name);
+                        node.setX3(diff);
+                        node.setX4(diff);
+                    }
+                }
+                if (node.nextNode) {
+                    this.rerere(node.nextNode);
+                }
+            }
+            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+                var leftNode = this.findNode(node.col - 1, node.row);
+                if (leftNode) {
+                    if (leftNode.ww > node.ll) {
+                        console.log(node.token.name);
+                        var diff = leftNode.ww - node.ll + 20;
+                        node.setX3(diff);
+                        node.setX4(diff);
+                    }
+                }
+                if (node.yesNode) {
+                    this.rerere(node.yesNode);
+                }
+                if (node.noNode) {
+                    this.rerere(node.noNode);
+                }
+            }
+            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
+                var leftNode = this.findNode(node.col - 1, node.row);
+                if (leftNode) {
+                    if (leftNode.ww > node.ll) {
+                        console.log(node.token.name);
+                        var diff = leftNode.ww - node.ll + 20;
+                        node.setX3(diff);
+                        node.setX4(diff);
+                    }
+                }
+                if (node.yesNode) {
+                    this.rerere(node.yesNode);
+                }
+                if (node.noNode) {
+                    this.rerere(node.noNode);
+                }
             }
         }
     };
@@ -93634,6 +93816,8 @@ var OperationNode = /** @class */ (function (_super) {
             this.nextNode = nextNode;
             if (!nextNode.placed) {
                 nextNode.placed = true;
+                this.bottomNode = nextNode;
+                nextNode.topNode = this;
                 nextNode.loopNode = this.loopNode;
                 nextNode.condNode = this.condNode;
                 nextNode.condNodes = this.condNodes;
@@ -93702,6 +93886,22 @@ var OperationNode = /** @class */ (function (_super) {
                 this.geometry.width / 2 -
                 this.nextNode.geometry.width / 2);
         }
+    };
+    OperationNode.prototype.setX3 = function (diff) {
+        this.moved = true;
+        this.geometry.x += diff;
+        this.ww += diff;
+        this.ll += diff;
+        // let topNode = this.topNode;
+        // let bottomNode = this.bottomNode;
+        // topNode.setX3(diff);
+        // bottomNode.setX3(diff);
+        if (this.bottomNode) {
+            this.bottomNode.setX3(diff);
+        }
+        // if (this.topNode) {
+        //   this.topNode.setXtop(diff);
+        // }
     };
     return OperationNode;
 }(_fc_base__WEBPACK_IMPORTED_MODULE_0__["default"]));
