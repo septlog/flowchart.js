@@ -93,14 +93,16 @@ textarea.addEventListener('input', (e: any) => {
   chart.drawSVG();
   graph.getModel().endUpdate();
 
-  let cw = graph.container.clientWidth;
-  let ch = graph.container.clientHeight;
+  // let cw = graph.container.offsetWidth;
+  // let ch = graph.container.offsetHeight;
   let { x, y, width, height } = graph.view.graphBounds;
 
-  let dx = cw - width;
-  let dy = ch - height;
+  // let dx = cw - width;
+  // let dy = ch - height;
 
-  graph.view.setTranslate(Math.floor(dx / 2 - x), Math.floor(dy / 2 - y));
+  graph.view.setTranslate(0.5 - x, 0.5 - y);
+  // var preview = new mxgraph.mxPrintPreview(graph);
+  // preview.open();
 });
 
 textarea.value = str;
