@@ -18,6 +18,9 @@ import llllcc2 from './test/llllcc2.txt';
 //四层循环
 import llll from './test/llll.txt';
 import llll2 from './test/llll2.txt';
+
+import s1 from './test/s1.txt';
+
 let mxgraph = require('mxgraph')({
   mxBasePath: './src',
   mxLoadResources: false,
@@ -117,6 +120,7 @@ let b10 = document.getElementById('b10');
 let b11 = document.getElementById('b11');
 let b12 = document.getElementById('b12');
 let b13 = document.getElementById('b13');
+let b14 = document.getElementById('b14');
 
 b3.addEventListener('click', () => {
   textarea.value = ll;
@@ -175,6 +179,11 @@ b13.addEventListener('click', () => {
 });
 b9.addEventListener('click', () => {
   textarea.value = llll2;
+  textarea.dispatchEvent(new Event('input'));
+});
+
+b14.addEventListener('click', () => {
+  textarea.value = s1;
   textarea.dispatchEvent(new Event('input'));
 });
 export { graph, parent };

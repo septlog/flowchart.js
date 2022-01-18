@@ -79,29 +79,11 @@ class BaseNode {
   setX4(diff: number) {
     if (this.topNode && !this.topNode.moved) {
       this.topNode.geometry.x += diff;
-      this.ww += diff;
-      this.ll += diff;
-      this.w += diff;
-      this.l += diff;
-      this.topNode.setX4(diff);
-    }
-  }
-
-  setXtop(diff: number) {
-    if (this.topNode) {
-      this.topNode.geometry.x += diff;
       this.topNode.ww += diff;
       this.topNode.ll += diff;
-      this.topNode.setXtop(diff);
-    }
-  }
-
-  setXbottom(diff: number): void {
-    if (this.bottomNode) {
-      this.bottomNode.geometry.x += diff;
-      this.bottomNode.w += diff;
-      this.bottomNode.l += diff;
-      this.bottomNode.setXbottom(diff);
+      this.topNode.w += diff;
+      this.topNode.l += diff;
+      this.topNode.setX4(diff);
     }
   }
 
@@ -112,7 +94,7 @@ class BaseNode {
 
   drawLine() {}
 
-  down(num: number) {}
+  downTo(num: number) {}
 
   updateRow(row: number) {
     if (row > this.chart.rows) {

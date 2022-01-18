@@ -56,9 +56,9 @@ class OperationNode extends BaseNode {
     }
   }
 
-  back(nextNode: LoopNode) {
+  back(backNode: LoopNode) {
     this.isBack = true;
-    this.backNode = nextNode;
+    this.backNode = backNode;
     if (!this.visited) {
       this.visited = true;
 
@@ -67,17 +67,17 @@ class OperationNode extends BaseNode {
     }
   }
 
-  down(num: number): void {
-    this.row += num;
+  downTo(num: number): void {
+    this.row = num;
     this.updateRow(this.row);
     if (this.nextNode) {
-      this.nextNode.down(num);
+      this.nextNode.downTo(this.row + 1);
     }
 
     if (this.backNode) {
       if (this.backNode.noNode) {
-        this.backNode.noNode.down(num);
-        this.backNode.noNodeRow += num;
+        this.backNode.noNode.downTo(this.row + 1);
+        this.backNode.noNodeRow = this.row + 1;
         this.backNode.endRow = this.row;
         this.updateRow(this.backNode.noNodeRow);
       }
@@ -142,6 +142,8 @@ class OperationNode extends BaseNode {
     this.geometry.x += diff;
     this.ww += diff;
     this.ll += diff;
+    this.w += diff;
+    this.l += diff;
     // let topNode = this.topNode;
     // let bottomNode = this.bottomNode;
     // topNode.setX3(diff);

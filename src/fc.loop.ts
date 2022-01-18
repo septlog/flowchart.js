@@ -105,14 +105,14 @@ class LoopNode extends BaseNode {
     }
   }
 
-  down(num: number) {
-    this.row += num;
+  downTo(num: number) {
+    this.row = num;
     this.updateRow(this.row);
     if (this.yesNode) {
-      this.yesNode.down(num);
+      this.yesNode.downTo(this.row + 1);
     }
     if (this.noNode) {
-      this.noNode.down(num);
+      this.noNode.downTo(this.row + 1);
     }
   }
 
@@ -163,24 +163,6 @@ class LoopNode extends BaseNode {
 
     if (this.noNode && this.noNode.col === this.col) {
       this.noNode.setX3(diff);
-    }
-  }
-
-  setXtop(diff: number) {
-    if (this.topNode) {
-      this.topNode.geometry.x += diff;
-      this.topNode.w += diff;
-      this.topNode.l += diff;
-      this.topNode.setXtop(diff);
-    }
-  }
-
-  setXbottom(diff: number): void {
-    if (this.bottomNode) {
-      this.bottomNode.geometry.x += diff;
-      this.bottomNode.w += diff;
-      this.bottomNode.l += diff;
-      this.bottomNode.setXbottom(diff);
     }
   }
 }

@@ -125,15 +125,14 @@ class ConditionNode extends BaseNode {
     }
   }
 
-  down(num: number) {
-    this.row += num;
-    // this.yesNode.row = this.row + 1;
+  downTo(num: number) {
+    this.row = num;
     this.updateRow(this.row);
     if (this.yesNode) {
-      this.yesNode.down(num);
+      this.yesNode.downTo(this.row + 1);
     }
     if (this.noNode) {
-      this.noNode.down(num);
+      this.noNode.downTo(this.row + 1);
     }
   }
 
@@ -196,21 +195,14 @@ class ConditionNode extends BaseNode {
     this.geometry.x += diff;
     this.ww += diff;
     this.ll += diff;
+    this.w += diff;
+    this.l += diff;
     if (this.bottomNode) {
       this.bottomNode.setX3(diff);
     }
 
     if (this.noNode) {
       this.noNode.setX3(diff);
-    }
-  }
-
-  setXtop(diff: number) {
-    if (this.topNode) {
-      this.topNode.geometry.x += diff;
-      this.topNode.w += diff;
-      this.topNode.l += diff;
-      this.topNode.setXtop(diff);
     }
   }
 }

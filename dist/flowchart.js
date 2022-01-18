@@ -92629,27 +92629,11 @@ var BaseNode = /** @class */ (function () {
     BaseNode.prototype.setX4 = function (diff) {
         if (this.topNode && !this.topNode.moved) {
             this.topNode.geometry.x += diff;
-            this.ww += diff;
-            this.ll += diff;
-            this.w += diff;
-            this.l += diff;
-            this.topNode.setX4(diff);
-        }
-    };
-    BaseNode.prototype.setXtop = function (diff) {
-        if (this.topNode) {
-            this.topNode.geometry.x += diff;
             this.topNode.ww += diff;
             this.topNode.ll += diff;
-            this.topNode.setXtop(diff);
-        }
-    };
-    BaseNode.prototype.setXbottom = function (diff) {
-        if (this.bottomNode) {
-            this.bottomNode.geometry.x += diff;
-            this.bottomNode.w += diff;
-            this.bottomNode.l += diff;
-            this.bottomNode.setXbottom(diff);
+            this.topNode.w += diff;
+            this.topNode.l += diff;
+            this.topNode.setX4(diff);
         }
     };
     BaseNode.prototype.setXX = function (diff) { };
@@ -92657,7 +92641,7 @@ var BaseNode = /** @class */ (function () {
         this.geometry.y = num;
     };
     BaseNode.prototype.drawLine = function () { };
-    BaseNode.prototype.down = function (num) { };
+    BaseNode.prototype.downTo = function (num) { };
     BaseNode.prototype.updateRow = function (row) {
         if (row > this.chart.rows) {
             this.chart.rows = row;
@@ -92801,15 +92785,14 @@ var ConditionNode = /** @class */ (function (_super) {
             this.noNode.setX2(this.geometry.x + this.geometry.width + this.lineLength);
         }
     };
-    ConditionNode.prototype.down = function (num) {
-        this.row += num;
-        // this.yesNode.row = this.row + 1;
+    ConditionNode.prototype.downTo = function (num) {
+        this.row = num;
         this.updateRow(this.row);
         if (this.yesNode) {
-            this.yesNode.down(num);
+            this.yesNode.downTo(this.row + 1);
         }
         if (this.noNode) {
-            this.noNode.down(num);
+            this.noNode.downTo(this.row + 1);
         }
     };
     ConditionNode.prototype.drawLine = function () {
@@ -92849,19 +92832,13 @@ var ConditionNode = /** @class */ (function (_super) {
         this.geometry.x += diff;
         this.ww += diff;
         this.ll += diff;
+        this.w += diff;
+        this.l += diff;
         if (this.bottomNode) {
             this.bottomNode.setX3(diff);
         }
         if (this.noNode) {
             this.noNode.setX3(diff);
-        }
-    };
-    ConditionNode.prototype.setXtop = function (diff) {
-        if (this.topNode) {
-            this.topNode.geometry.x += diff;
-            this.topNode.w += diff;
-            this.topNode.l += diff;
-            this.topNode.setXtop(diff);
         }
     };
     return ConditionNode;
@@ -93015,14 +92992,14 @@ var LoopNode = /** @class */ (function (_super) {
             ___WEBPACK_IMPORTED_MODULE_1__.graph.insertEdge(___WEBPACK_IMPORTED_MODULE_1__.parent, null, '', this.vertex, this.yesNode.vertex);
         }
     };
-    LoopNode.prototype.down = function (num) {
-        this.row += num;
+    LoopNode.prototype.downTo = function (num) {
+        this.row = num;
         this.updateRow(this.row);
         if (this.yesNode) {
-            this.yesNode.down(num);
+            this.yesNode.downTo(this.row + 1);
         }
         if (this.noNode) {
-            this.noNode.down(num);
+            this.noNode.downTo(this.row + 1);
         }
     };
     LoopNode.prototype.updateLoops = function () {
@@ -93064,22 +93041,6 @@ var LoopNode = /** @class */ (function (_super) {
         }
         if (this.noNode && this.noNode.col === this.col) {
             this.noNode.setX3(diff);
-        }
-    };
-    LoopNode.prototype.setXtop = function (diff) {
-        if (this.topNode) {
-            this.topNode.geometry.x += diff;
-            this.topNode.w += diff;
-            this.topNode.l += diff;
-            this.topNode.setXtop(diff);
-        }
-    };
-    LoopNode.prototype.setXbottom = function (diff) {
-        if (this.bottomNode) {
-            this.bottomNode.geometry.x += diff;
-            this.bottomNode.w += diff;
-            this.bottomNode.l += diff;
-            this.bottomNode.setXbottom(diff);
         }
     };
     return LoopNode;
@@ -93191,8 +93152,6 @@ var Chart = /** @class */ (function () {
         }
         this.re();
         this.rerere(this.getNode(this.start));
-        // this.re();
-        // this.rePosition2(this.getNode(this.start));
         this.re();
         this.reLine(this.start);
     };
@@ -93247,13 +93206,6 @@ var Chart = /** @class */ (function () {
             }
         }
     };
-    // alignChart(token: Token) {
-    //   let node = this.getNode(token);
-    //   let nextNode = node.nextNode;
-    //   if (nextNode && nextNode.row < node.row + 1) {
-    //     nextNode.down(node.row + 1 - nextNode.row);
-    //   }
-    // }
     Chart.prototype.re = function () {
         for (var nodeName in this.nodes) {
             var node = this.nodes[nodeName];
@@ -93267,14 +93219,7 @@ var Chart = /** @class */ (function () {
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var nextNode = node.nextNode;
                 if (nextNode && nextNode.row < node.row + 1) {
-                    nextNode.down(node.row + 1 - nextNode.row);
-                    // this.rows += node.row + 1 - nextNode.row;
-                }
-                var backNode = node.backNode;
-                if (backNode &&
-                    backNode.noNodeRow !== 0 &&
-                    backNode.noNodeRow < node.row + 1) {
-                    backNode.noNode.down(node.row + 1 - backNode.noNodeRow);
+                    nextNode.downTo(node.row + 1);
                 }
                 if (token.next) {
                     this.rePosition(token.next);
@@ -93294,44 +93239,6 @@ var Chart = /** @class */ (function () {
                 }
                 if (token.no) {
                     this.rePosition(token.no);
-                }
-            }
-        }
-    };
-    Chart.prototype.rePosition2 = function (node) {
-        if (!node.visited) {
-            node.visited = true;
-            if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
-                if (node.nextNode) {
-                    if (node.nextNode.geometry.x + node.nextNode.geometry.width / 2 !==
-                        node.geometry.x + node.geometry.x / 2) {
-                        console.log(node.token.name);
-                    }
-                    this.rePosition2(node.nextNode);
-                }
-            }
-            else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
-                if (node.yesNode) {
-                    if (node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
-                        node.geometry.x + node.geometry.x / 2) {
-                        console.log(node.token.name);
-                    }
-                    this.rePosition2(node.yesNode);
-                }
-                if (node.noNode) {
-                    this.rePosition2(node.noNode);
-                }
-            }
-            else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
-                if (node.yesNode) {
-                    if (node.yesNode.geometry.x + node.yesNode.geometry.width / 2 !==
-                        node.geometry.x + node.geometry.x / 2) {
-                        console.log(node.token.name);
-                    }
-                    this.rePosition2(node.yesNode);
-                }
-                if (node.noNode) {
-                    this.rePosition2(node.noNode);
                 }
             }
         }
@@ -93409,9 +93316,6 @@ var Chart = /** @class */ (function () {
                         w = yesW;
                     }
                 }
-                if (node.token.name === '3') {
-                    console.log(w);
-                }
                 if (node.noNode) {
                     node.noNode.setX2(w + 40);
                     var noW = this.iterateW(node.noNode);
@@ -93466,6 +93370,7 @@ var Chart = /** @class */ (function () {
                 }
                 l -= 20;
                 node.l = l;
+                console.log(node.l);
                 node.ll = l;
                 return l;
             }
@@ -93495,12 +93400,14 @@ var Chart = /** @class */ (function () {
             if (node instanceof _fs_operation__WEBPACK_IMPORTED_MODULE_2__["default"]) {
                 var leftNode = this.findNode(node.col - 1, node.row);
                 if (leftNode) {
-                    if (leftNode.ww > node.ll) {
+                    if (leftNode.ww > node.ll && leftNode.ww < node.ww) {
+                        // if (leftNode.loopNode !== node.loopNode) {
                         console.log(node.token.name);
                         var diff = leftNode.ww - node.ll + 20;
                         console.log(node.token.name);
                         node.setX3(diff);
-                        node.setX4(diff);
+                        // node.setX4(diff);
+                        // }
                     }
                 }
                 if (node.nextNode) {
@@ -93510,11 +93417,11 @@ var Chart = /** @class */ (function () {
             else if (node instanceof _fc_condition__WEBPACK_IMPORTED_MODULE_3__["default"]) {
                 var leftNode = this.findNode(node.col - 1, node.row);
                 if (leftNode) {
-                    if (leftNode.ww > node.ll) {
-                        console.log(node.token.name);
+                    if (leftNode.ww > node.ll && leftNode.ww < node.ww) {
+                        // if (leftNode.loopNode !== node.loopNode) {
                         var diff = leftNode.ww - node.ll + 20;
                         node.setX3(diff);
-                        node.setX4(diff);
+                        // }
                     }
                 }
                 if (node.yesNode) {
@@ -93527,11 +93434,12 @@ var Chart = /** @class */ (function () {
             else if (node instanceof _fc_loop__WEBPACK_IMPORTED_MODULE_4__.LoopNode) {
                 var leftNode = this.findNode(node.col - 1, node.row);
                 if (leftNode) {
-                    if (leftNode.ww > node.ll) {
-                        console.log(node.token.name);
+                    if (leftNode.ww > node.ll && leftNode.ww < node.ww) {
+                        // if (leftNode.loopNode !== node.loopNode) {
                         var diff = leftNode.ww - node.ll + 20;
                         node.setX3(diff);
                         node.setX4(diff);
+                        // }
                     }
                 }
                 if (node.yesNode) {
@@ -93839,25 +93747,25 @@ var OperationNode = /** @class */ (function (_super) {
             }
         }
     };
-    OperationNode.prototype.back = function (nextNode) {
+    OperationNode.prototype.back = function (backNode) {
         this.isBack = true;
-        this.backNode = nextNode;
+        this.backNode = backNode;
         if (!this.visited) {
             this.visited = true;
             this.backNode.noNodeRow = this.row + 1;
             this.backNode.endRow = this.row;
         }
     };
-    OperationNode.prototype.down = function (num) {
-        this.row += num;
+    OperationNode.prototype.downTo = function (num) {
+        this.row = num;
         this.updateRow(this.row);
         if (this.nextNode) {
-            this.nextNode.down(num);
+            this.nextNode.downTo(this.row + 1);
         }
         if (this.backNode) {
             if (this.backNode.noNode) {
-                this.backNode.noNode.down(num);
-                this.backNode.noNodeRow += num;
+                this.backNode.noNode.downTo(this.row + 1);
+                this.backNode.noNodeRow = this.row + 1;
                 this.backNode.endRow = this.row;
                 this.updateRow(this.backNode.noNodeRow);
             }
@@ -93892,6 +93800,8 @@ var OperationNode = /** @class */ (function (_super) {
         this.geometry.x += diff;
         this.ww += diff;
         this.ll += diff;
+        this.w += diff;
+        this.l += diff;
         // let topNode = this.topNode;
         // let bottomNode = this.bottomNode;
         // topNode.setX3(diff);
@@ -93937,6 +93847,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _test_llllcc2_txt__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./test/llllcc2.txt */ "./src/test/llllcc2.txt");
 /* harmony import */ var _test_llll_txt__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/llll.txt */ "./src/test/llll.txt");
 /* harmony import */ var _test_llll2_txt__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./test/llll2.txt */ "./src/test/llll2.txt");
+/* harmony import */ var _test_s1_txt__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./test/s1.txt */ "./src/test/s1.txt");
 
 //两层循环
 
@@ -93954,6 +93865,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 //四层循环
+
 
 
 var mxgraph = __webpack_require__(/*! mxgraph */ "./node_modules/mxgraph/javascript/dist/build.js")({
@@ -94035,6 +93947,7 @@ var b10 = document.getElementById('b10');
 var b11 = document.getElementById('b11');
 var b12 = document.getElementById('b12');
 var b13 = document.getElementById('b13');
+var b14 = document.getElementById('b14');
 b3.addEventListener('click', function () {
     textarea.value = _test_ll_txt__WEBPACK_IMPORTED_MODULE_1__;
     textarea.dispatchEvent(new Event('input'));
@@ -94085,6 +93998,10 @@ b13.addEventListener('click', function () {
 });
 b9.addEventListener('click', function () {
     textarea.value = _test_llll2_txt__WEBPACK_IMPORTED_MODULE_13__;
+    textarea.dispatchEvent(new Event('input'));
+});
+b14.addEventListener('click', function () {
+    textarea.value = _test_s1_txt__WEBPACK_IMPORTED_MODULE_14__;
     textarea.dispatchEvent(new Event('input'));
 });
 
@@ -94232,6 +94149,17 @@ module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20\r\nloop3=>loop: k<30\r\
 
 "use strict";
 module.exports = "loop1=>loop: i<10\r\nloop2=>loop: j<20j<20j<20j<20j<20j<20j<20\r\nloop3=>loop: k<30k<30k<30k<30k<30k<30k<30\r\nloop4=>loop: h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5h<5\r\nop1=>operation: 语句1\r\nop2=>operation: 语句2\r\nop3=>operation: 语句3\r\nop4=>operation: 语句4\r\nop9=>operation: ??\r\nop5=>operation: k++\r\nop6=>operation: j++\r\nop7=>operation: i++\r\nop8=>operation: h++\r\nop10=>operation: 语句5\r\nop11=>operation: 语句6\r\nop12=>operation: 语句7\r\ncond1=>condition: 条件A\r\ncond2=>condition: 条件B\r\nloop4(yes)->loop1\r\nloop4(no)->op9\r\nloop1(yes)->op1\r\nloop1(no)->op4\r\nloop2(yes)->op2\r\nloop2(no)->op7\r\nloop3(yes)->op3\r\nloop3(no)->op6\r\nop1->loop2\r\nop2->loop3\r\nop3->cond1\r\ncond1(yes)->op10\r\n\r\ncond1(no)->cond2\r\n\r\ncond2(yes)->op11\r\n\r\ncond2(no)->op12\r\nop12->op5\r\n\r\n\r\n\r\nop10->op5\r\n\r\nop11->op5\r\nop5->loop3\r\nop6->loop2\r\nop7->loop1\r\nop4->op8\r\nop8->loop4\r\n";
+
+/***/ }),
+
+/***/ "./src/test/s1.txt":
+/*!*************************!*\
+  !*** ./src/test/s1.txt ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "cond1=>condition: 1\r\ncond2=>condition: 2\r\ncond3=>condition: 3\r\ncond4=>condition: 4\r\ncond5=>condition: 5\r\ncond6=>condition: 6\r\ncond7=>condition: 7\r\ncond8=>condition: 8\r\ncond9=>condition: 9\r\ncond10=>condition: 10\r\ncond11=>condition: 11\r\ncond12=>condition: 12\r\ncond13=>condition: 13\r\ncond14=>condition: 14\r\ncond15=>condition: 15\r\ncond16=>condition: 16\r\ncond17=>condition: 17\r\ncond18=>condition: 18\r\n\r\nloop1=>loop: i< 10\r\nloop2=>loop: j< 10\r\nloop3=>loop: i< 10\r\nloop4=>loop: j< 10\r\nloop5=>loop: i< 10\r\nloop6=>loop: j< 10\r\n\r\n\r\nop1=>operation: a()\r\nop2=>operation: a()\r\nop3=>operation: a()\r\nop4=>operation: a()\r\nop5=>operation: a()\r\nop6=>operation: a()\r\nop7=>operation: a()\r\nop8=>operation: a()\r\nop9=>operation: a()\r\nop10=>operation: a()\r\nop11=>operation: a()\r\nop12=>operation: a()\r\nop13=>operation: a()\r\nop14=>operation: a()\r\nop15=>operation: i++\r\nop16=>operation: j++\r\nop17=>operation: i++\r\nop18=>operation: j++\r\nop19=>operation: i++\r\nop20=>operation: j++\r\nop21=>operation: end\r\n\r\n\r\n\r\n\r\ncond1(yes)->loop1\r\ncond1(no)->cond2\r\ncond2(yes)->loop3\r\ncond2(no)->cond3\r\ncond3(yes)->loop5\r\ncond3(no)->cond17\r\ncond4(yes)->op3\r\ncond4(no)->cond5\r\ncond5(yes)->op4\r\ncond5(no)->cond6\r\ncond6(yes)->op5\r\ncond6(no)->cond7\r\ncond7(yes)->cond8\r\ncond8(yes)->cond9\r\ncond9(yes)->op6\r\ncond9(no)->cond10\r\ncond10(yes)->op7\r\ncond11(yes)->op8\r\ncond11(no)->cond12\r\ncond12(yes)->op9\r\ncond12(no)->cond13\r\ncond13(yes)->cond14\r\ncond14(yes)->cond15\r\ncond15(yes)->op10\r\ncond15(no)->cond16\r\ncond16(yes)->op11\r\ncond17(yes)->op12\r\ncond17(no)->cond18\r\ncond18(yes)->op13\r\ncond18(no)->op14\r\n\r\nloop1(yes)->loop2\r\nloop1(no)->op21\r\nloop2(yes)->op1\r\nloop2(no)->op15\r\nloop3(yes)->loop4\r\nloop3(no)->op21\r\nloop4(yes)->op2\r\nloop4(no)->op17\r\nloop5(yes)->loop6\r\nloop5(no)->op21\r\nloop6(yes)->cond4\r\nloop6(no)->cond11\r\n\r\n\r\nop1->op16\r\nop2->op18\r\nop3->op20\r\nop4->op20\r\nop5->op20\r\nop6->op20\r\nop7->op20\r\nop8->op19\r\nop9->op19\r\nop10->op19\r\nop11->op19\r\nop12->op21\r\nop13->op21\r\nop14->op21\r\nop15->loop1\r\nop16->loop2\r\nop17->loop3\r\nop18->loop4\r\nop19->loop5\r\nop20->loop6";
 
 /***/ })
 

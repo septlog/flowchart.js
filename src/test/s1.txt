@@ -1,0 +1,117 @@
+cond1=>condition: 1
+cond2=>condition: 2
+cond3=>condition: 3
+cond4=>condition: 4
+cond5=>condition: 5
+cond6=>condition: 6
+cond7=>condition: 7
+cond8=>condition: 8
+cond9=>condition: 9
+cond10=>condition: 10
+cond11=>condition: 11
+cond12=>condition: 12
+cond13=>condition: 13
+cond14=>condition: 14
+cond15=>condition: 15
+cond16=>condition: 16
+cond17=>condition: 17
+cond18=>condition: 18
+
+loop1=>loop: i< 10
+loop2=>loop: j< 10
+loop3=>loop: i< 10
+loop4=>loop: j< 10
+loop5=>loop: i< 10
+loop6=>loop: j< 10
+
+
+op1=>operation: a()
+op2=>operation: a()
+op3=>operation: a()
+op4=>operation: a()
+op5=>operation: a()
+op6=>operation: a()
+op7=>operation: a()
+op8=>operation: a()
+op9=>operation: a()
+op10=>operation: a()
+op11=>operation: a()
+op12=>operation: a()
+op13=>operation: a()
+op14=>operation: a()
+op15=>operation: i++
+op16=>operation: j++
+op17=>operation: i++
+op18=>operation: j++
+op19=>operation: i++
+op20=>operation: j++
+op21=>operation: end
+
+
+
+
+cond1(yes)->loop1
+cond1(no)->cond2
+cond2(yes)->loop3
+cond2(no)->cond3
+cond3(yes)->loop5
+cond3(no)->cond17
+cond4(yes)->op3
+cond4(no)->cond5
+cond5(yes)->op4
+cond5(no)->cond6
+cond6(yes)->op5
+cond6(no)->cond7
+cond7(yes)->cond8
+cond8(yes)->cond9
+cond9(yes)->op6
+cond9(no)->cond10
+cond10(yes)->op7
+cond11(yes)->op8
+cond11(no)->cond12
+cond12(yes)->op9
+cond12(no)->cond13
+cond13(yes)->cond14
+cond14(yes)->cond15
+cond15(yes)->op10
+cond15(no)->cond16
+cond16(yes)->op11
+cond17(yes)->op12
+cond17(no)->cond18
+cond18(yes)->op13
+cond18(no)->op14
+
+loop1(yes)->loop2
+loop1(no)->op21
+loop2(yes)->op1
+loop2(no)->op15
+loop3(yes)->loop4
+loop3(no)->op21
+loop4(yes)->op2
+loop4(no)->op17
+loop5(yes)->loop6
+loop5(no)->op21
+loop6(yes)->cond4
+loop6(no)->cond11
+
+
+op1->op16
+op2->op18
+op3->op20
+op4->op20
+op5->op20
+op6->op20
+op7->op20
+op8->op19
+op9->op19
+op10->op19
+op11->op19
+op12->op21
+op13->op21
+op14->op21
+op15->loop1
+op16->loop2
+op17->loop3
+op18->loop4
+op19->loop5
+op20->loop6
