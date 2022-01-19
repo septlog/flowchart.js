@@ -8,9 +8,23 @@ class OperationNode extends BaseNode {
   isBack: boolean;
   nextNode: BaseNode;
   backNode: LoopNode;
-  constructor(token: Token, chart: Chart) {
+  constructor(
+    token: Token,
+    chart: Chart,
+    shape: string = 'rectangle',
+    extra: string = '',
+  ) {
     super(token, chart);
-    let vertex = graph.insertVertex(parent, null, token.text, 0, 0, 10, 10);
+    let vertex = graph.insertVertex(
+      parent,
+      null,
+      token.text,
+      0,
+      0,
+      10,
+      10,
+      `shape=${shape};${extra}`,
+    );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);
   }

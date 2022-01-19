@@ -26,7 +26,7 @@ class LoopNode extends BaseNode {
       0,
       10,
       10,
-      'shape=rhombus;overflow=hidden;spacing=10',
+      'shape=rhombus;spacing=10',
     );
     this.vertex = vertex;
     graph.updateCellSize(vertex, true);

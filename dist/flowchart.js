@@ -92878,8 +92878,8 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 var EndNode = /** @class */ (function (_super) {
     __extends(EndNode, _super);
-    function EndNode() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    function EndNode(token, chart) {
+        return _super.call(this, token, chart, null, 'rounded=1;arcSize=50;spacingLeft=5;spacingRight=5') || this;
     }
     return EndNode;
 }(_fs_operation__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -92930,7 +92930,7 @@ var LoopNode = /** @class */ (function (_super) {
         _this.loops = 1;
         _this.rights = 1;
         _this.rrrr = 0;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus;overflow=hidden;spacing=10');
+        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, 'shape=rhombus;spacing=10');
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
         return _this;
@@ -93664,8 +93664,8 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 var StartNode = /** @class */ (function (_super) {
     __extends(StartNode, _super);
-    function StartNode() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    function StartNode(token, chart) {
+        return _super.call(this, token, chart, 'box', 'spacingLeft=5;spacingRight=5') || this;
     }
     return StartNode;
 }(_fs_operation__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -93706,9 +93706,11 @@ var __extends = (undefined && undefined.__extends) || (function () {
 
 var OperationNode = /** @class */ (function (_super) {
     __extends(OperationNode, _super);
-    function OperationNode(token, chart) {
+    function OperationNode(token, chart, shape, extra) {
+        if (shape === void 0) { shape = 'rectangle'; }
+        if (extra === void 0) { extra = ''; }
         var _this = _super.call(this, token, chart) || this;
-        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10);
+        var vertex = ___WEBPACK_IMPORTED_MODULE_1__.graph.insertVertex(___WEBPACK_IMPORTED_MODULE_1__.parent, null, token.text, 0, 0, 10, 10, "shape=".concat(shape, ";").concat(extra));
         _this.vertex = vertex;
         ___WEBPACK_IMPORTED_MODULE_1__.graph.updateCellSize(vertex, true);
         return _this;
@@ -93848,6 +93850,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _test_llll_txt__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/llll.txt */ "./src/test/llll.txt");
 /* harmony import */ var _test_llll2_txt__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./test/llll2.txt */ "./src/test/llll2.txt");
 /* harmony import */ var _test_s1_txt__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./test/s1.txt */ "./src/test/s1.txt");
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 
 //两层循环
 
@@ -93882,7 +93899,6 @@ graph.setAllowDanglingEdges(false);
 graph.setDisconnectOnMove(false);
 // graph.cellsSelectable = true;
 // graph.autoSizeCells = true;
-// mxgraph.mxText.textWidthPadding = 30;
 mxgraph.mxGraphHandler.guidesEnabled = true;
 mxgraph.mxEdgeHandler.snapToTerminals = true;
 new mxgraph.mxRubberband(graph);
@@ -93890,6 +93906,7 @@ var style = graph.stylesheet.getDefaultEdgeStyle();
 style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
+// style[mxgraph.mxConstants.STYLE_ROUNDED] = true;
 graph.getStylesheet().getDefaultEdgeStyle()['edgeStyle'] =
     'orthogonalEdgeStyle';
 style = graph.stylesheet.getDefaultVertexStyle();
@@ -93897,6 +93914,31 @@ style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 var parent = graph.getDefaultParent();
+var BoxShape = /** @class */ (function (_super) {
+    __extends(BoxShape, _super);
+    function BoxShape() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    BoxShape.prototype.redrawPath = function (path, x, y, w, h, isForeground) {
+        var x1 = 0 - 1;
+        var x2 = h / 2;
+        var x3 = w - h / 2;
+        var x4 = w + 1;
+        var y1 = 0;
+        var y2 = h / 2;
+        var y3 = h;
+        path.moveTo(x1, y2);
+        path.lineTo(x2, y1);
+        path.lineTo(x3, y1);
+        path.lineTo(x4, y2);
+        path.lineTo(x3, y3);
+        path.lineTo(x2, y3);
+        path.lineTo(x1, y2);
+        path.close();
+    };
+    return BoxShape;
+}(mxgraph.mxCylinder));
+mxgraph.mxCellRenderer.registerShape('box', BoxShape);
 var str = _test_clclccc_txt__WEBPACK_IMPORTED_MODULE_4__;
 var textarea = document.querySelector('textarea');
 textarea.addEventListener('input', function (e) {
@@ -93925,14 +93967,8 @@ textarea.addEventListener('input', function (e) {
     graph.getModel().beginUpdate();
     chart.drawSVG();
     graph.getModel().endUpdate();
-    // let cw = graph.container.offsetWidth;
-    // let ch = graph.container.offsetHeight;
     var _a = graph.view.graphBounds, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-    // let dx = cw - width;
-    // let dy = ch - height;
     graph.view.setTranslate(0.5 - x, 0.5 - y);
-    // var preview = new mxgraph.mxPrintPreview(graph);
-    // preview.open();
 });
 textarea.value = str;
 textarea.dispatchEvent(new Event('input'));

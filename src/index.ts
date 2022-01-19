@@ -37,7 +37,6 @@ graph.setAllowDanglingEdges(false);
 graph.setDisconnectOnMove(false);
 // graph.cellsSelectable = true;
 // graph.autoSizeCells = true;
-// mxgraph.mxText.textWidthPadding = 30;
 mxgraph.mxGraphHandler.guidesEnabled = true;
 mxgraph.mxEdgeHandler.snapToTerminals = true;
 
@@ -47,6 +46,7 @@ let style = graph.stylesheet.getDefaultEdgeStyle();
 style[mxgraph.mxConstants.STYLE_FONTCOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = 'white';
 style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
+// style[mxgraph.mxConstants.STYLE_ROUNDED] = true;
 graph.getStylesheet().getDefaultEdgeStyle()['edgeStyle'] =
   'orthogonalEdgeStyle';
 style = graph.stylesheet.getDefaultVertexStyle();
@@ -55,6 +55,30 @@ style[mxgraph.mxConstants.STYLE_STROKECOLOR] = 'black';
 style[mxgraph.mxConstants.STYLE_FILLCOLOR] = 'white';
 
 let parent = graph.getDefaultParent();
+
+class BoxShape extends mxgraph.mxCylinder {
+  redrawPath(path, x, y, w, h, isForeground) {
+    let x1 = 0 - 1;
+    let x2 = h / 2;
+    let x3 = w - h / 2;
+    let x4 = w + 1;
+
+    let y1 = 0;
+    let y2 = h / 2;
+    let y3 = h;
+
+    path.moveTo(x1, y2);
+    path.lineTo(x2, y1);
+    path.lineTo(x3, y1);
+    path.lineTo(x4, y2);
+    path.lineTo(x3, y3);
+    path.lineTo(x2, y3);
+    path.lineTo(x1, y2);
+    path.close();
+  }
+}
+
+mxgraph.mxCellRenderer.registerShape('box', BoxShape);
 
 let str = clclccc;
 
@@ -93,16 +117,9 @@ textarea.addEventListener('input', (e: any) => {
   chart.drawSVG();
   graph.getModel().endUpdate();
 
-  // let cw = graph.container.offsetWidth;
-  // let ch = graph.container.offsetHeight;
   let { x, y, width, height } = graph.view.graphBounds;
 
-  // let dx = cw - width;
-  // let dy = ch - height;
-
   graph.view.setTranslate(0.5 - x, 0.5 - y);
-  // var preview = new mxgraph.mxPrintPreview(graph);
-  // preview.open();
 });
 
 textarea.value = str;
